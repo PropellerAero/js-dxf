@@ -13,11 +13,13 @@ class Mesh {
     let s = `0\nMESH\n`;
     s += `8\n${this.layer.name}\n`;
 
+    s += `92\n${this.vertices.length}\n`;
+
     this.vertices.forEach(([x, y, z]) => {
       s += `10\n${x}\n20\n${y}\n30\n${z}\n`;
     });
 
-    s += `93\n${Math.round(this.faceIndices.length)}\n`;
+    s += `93\n${this.faceIndices.length * 4}\n`;
 
     this.faceIndices.forEach((indices) => {
       s += `90\n${indices.length}\n`;
@@ -26,6 +28,9 @@ class Mesh {
         s += `90\n${index}\n`;
       });
     });
+
+    s += '90\n0\n';
+
     return s;
   }
 }
