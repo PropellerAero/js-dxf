@@ -19,7 +19,12 @@ class Mesh {
       s += `10\n${x}\n20\n${y}\n30\n${z}\n`;
     });
 
-    s += `93\n${this.faceIndices.length * 4}\n`;
+    const faceGroupCount = this.faceIndices.reduce(
+      (total, indices) => total + indices.length + 1,
+      0
+    );
+
+    s += `93\n${faceGroupCount}\n`;
 
     this.faceIndices.forEach((indices) => {
       s += `90\n${indices.length}\n`;
