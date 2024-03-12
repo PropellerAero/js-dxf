@@ -1,3 +1,5 @@
+import { Writable } from "stream";
+
 declare module "@propelleraero/dxf-writer" {
     export type Unit =
         | "Unitless"
@@ -38,6 +40,10 @@ declare module "@propelleraero/dxf-writer" {
     abstract class Block {
         constructor(name: string);
         tags(manager: TagsManager): void;
+    }
+
+    export abstract class TagsStreamManager extends TagsManager {
+        constructor(stream: Stream);
     }
 
     export abstract class TagsManager extends RenderableToDxf {
@@ -452,6 +458,8 @@ declare module "@propelleraero/dxf-writer" {
         setUnits(unit: Unit): Drawing;
 
         toDxfString(): string;
+
+        writeDxfToStream(stream: Writable): void;
 
         /**
          * AutoCAD Color Index (ACI)
