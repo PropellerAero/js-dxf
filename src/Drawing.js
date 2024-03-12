@@ -26,8 +26,7 @@ const Handle = require("./Handle");
 const Mesh = require("./Mesh");
 
 class Drawing {
-    constructor(stream) {
-        this.stream = stream;
+    constructor() {
         this.layers = {};
         this.activeLayer = null;
         this.lineTypes = {};
