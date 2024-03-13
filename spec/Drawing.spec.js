@@ -68,4 +68,27 @@ describe("Drawing", function () {
         );
         fs.writeFileSync("output/mesh-simple.dxf", d.toDxfString());
     });
+
+    it("can draw a mesh to stream", function () {
+        const stream = new fs.createWriteStream(
+            "output/mesh-simple-stream.dxf"
+        );
+
+        var d = new Drawing();
+        d.drawMesh(
+            [
+                [0, 0, 0],
+                [100, 0, 0],
+                [0, 100, 0],
+                [100, 100, 0],
+            ],
+            [
+                [0, 2, 3],
+                [0, 3, 1],
+            ]
+        );
+
+        d.writeDxfToStream(stream);
+        stream.end();
+    });
 });
