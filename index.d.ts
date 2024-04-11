@@ -457,7 +457,7 @@ declare module "@propelleraero/dxf-writer" {
 
         toDxfString(): string;
 
-        writeDxfToStream(stream: Writable): Promise<void>;
+        writeDxfToStream(stream: Writable): void;
 
         /**
          * AutoCAD Color Index (ACI)
