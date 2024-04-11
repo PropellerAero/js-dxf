@@ -42,16 +42,14 @@ declare module "@propelleraero/dxf-writer" {
         tags(manager: TagsManager): void;
     }
 
-    export abstract class TagsStreamManager extends TagsManager {
-        constructor(stream: Stream);
-    }
-
     export abstract class TagsManager extends RenderableToDxf {
         point(x: number, y: number, z?: number): void;
         start(name: string): void;
         end(): void;
         addHeaderVariable(name: string, tagsElements: HeaderValue[]): void;
         push(code: string | number, value: string | number): void;
+        toDxfString(): string;
+        writeToStream(stream: Writable): void;
     }
 
     export class Arc extends RenderableToDxf {
