@@ -487,10 +487,8 @@ class Drawing {
         this.dictionary.addChildDictionary("ACAD_GROUP", d);
     }
 
-    _tagsManager(stream) {
-        const manager = stream
-            ? new TagsStreamManager(stream)
-            : new TagsManager();
+    _tagsManager() {
+        const manager = new TagsManager();
 
         // Setup
         const blockRecordTable = new Table("BLOCK_RECORD");
@@ -564,7 +562,7 @@ class Drawing {
     }
 
     writeDxfToStream(stream) {
-        return this._tagsManager(stream);
+        return this._tagsManager().writeToStream(stream);
     }
 }
 
