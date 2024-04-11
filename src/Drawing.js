@@ -21,7 +21,6 @@ const Point = require("./Point");
 const Spline = require("./Spline");
 const Ellipse = require("./Ellipse");
 const TagsManager = require("./TagsManager");
-const TagsStreamManager = require("./TagsStreamManager");
 const Handle = require("./Handle");
 const Mesh = require("./Mesh");
 
