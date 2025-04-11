@@ -1,21 +1,28 @@
 const TagsManager = require("./TagsManager");
 
 const DEFAULT_WRITE_CHUNK = 2000;
+const STREAM_NOT_WRITABLE_ERROR = "Stream is not writable. Reinstantiate the TagsManagerWithStream with a writable stream.";
 
 class TagsManagerWithStream extends TagsManager {
   constructor(stream, writeChunk = DEFAULT_WRITE_CHUNK) {
     super();
-    this.writeChunk = writeChunk;
-    this.stream = stream;
-    this.isWriting = false;
-    this.stream.on("drain", () => this._resumeWriting());
+    this._writeChunkSize = writeChunk;
+    this._stream = stream;
+    this._isDraining = false;
+    this._stream.on("drain", () => this._resumeWriting());
   }
 
   push(code, value) {
     super.push(code, value);
 
-    if (this.stream && this.stream.writable && !this.isWriting && this.lines.length > this.writeChunk) {
-      this._writeChunkToStream(this.lines.splice(0, this.writeChunk));
+    if (!this._stream.writable) {
+      throw new Error(STREAM_NOT_WRITABLE_ERROR);
+    }
+
+    console.log(this._isDraining)
+
+    if (!this._isDraining && this._lines.length > this._writeChunkSize) {
+      this._isDraining = this._writeChunkToStream(this._lines.splice(0, this._writeChunkSize));
     }
   }
 
@@ -24,13 +31,23 @@ class TagsManagerWithStream extends TagsManager {
   }
 
   writeToStream() {
-    if (!this.stream.writable) {
-      throw new Error("Stream is not writable. Reinstantiate the TagsManagerWithStream with a writable stream.");
+    if (!this._stream.writable) {
+      throw new Error(STREAM_NOT_WRITABLE_ERROR);
     }
 
-    while (this.lines.length > 0) {
-      if (this.stream && this.stream.writable && !this.isWriting) {
-        this._writeChunkToStream(this.lines.splice(0, this.writeChunk));
+    this._stream.removeAllListeners('drain');
+    this._stream.on("drain", () => this._writeRemainingLines());
+
+    this._writeRemainingLines();
+  }
+
+  _writeRemainingLines() {
+    while (this._lines.length > 0) {
+
+      const mustDrain = this._writeChunkToStream(this._lines.splice(0, this._writeChunkSize));
+
+      if (mustDrain) {
+        break;
       }
     }
 
@@ -38,17 +55,16 @@ class TagsManagerWithStream extends TagsManager {
   }
 
   _writeChunkToStream(lines) {
-    this.isWriting = true;
     const data = lines.join("\n") + "\n";
-    this.isWriting = this.stream.write(data);
+    return !this._stream.write(data);
   }
 
   _cleanupStream() {
-    this.stream.removeAllListeners('drain');
+    this._stream.removeAllListeners('drain');
   }
 
   _resumeWriting() {
-    this.isWriting = false;
+    this._isDraining = false;
   }
 }
 

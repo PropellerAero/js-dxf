@@ -1,6 +1,6 @@
 class TagsManager {
     constructor() {
-        this.lines = [];
+        this._lines = [];
     }
 
     /**
@@ -36,11 +36,11 @@ class TagsManager {
     }
 
     push(code, value) {
-        this.lines.push(code, value);
+        this._lines.push(code, value);
     }
 
     toDxfString() {
-        return this.lines.join("\n");
+        return this._lines.join("\n");
     }
 }
 

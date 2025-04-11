@@ -37,7 +37,7 @@ describe("TagsManagerWithStream", () => {
   });
 
   it("attaches a drain event handler", () => {
-    spyOn(stream, "on");
+    spyOn(stream, "on").and.callThrough();
 
     new TagsManagerWithStream(stream);
 
@@ -45,7 +45,7 @@ describe("TagsManagerWithStream", () => {
   });
 
   it("pushes tags to the stream once they exceed the writeChunk size", () => {
-    spyOn(stream, "write");
+    spyOn(stream, "write").and.callThrough();
 
     const tagsManager = new TagsManagerWithStream(stream, 4);
 
@@ -68,7 +68,7 @@ describe("TagsManagerWithStream", () => {
   });
 
   it("finishes writing to the stream when writeToStream is called", () => {
-    spyOn(stream, "write");
+    spyOn(stream, "write").and.callThrough();
 
     const tagsManager = new TagsManagerWithStream(stream, 4);
 
@@ -97,8 +97,18 @@ describe("TagsManagerWithStream", () => {
     }).toThrowError("Stream is not writable. Reinstantiate the TagsManagerWithStream with a writable stream.");
   });
 
+  it("throws an error if the stream is not writable when pushing", () => {
+    const tagsManager = new TagsManagerWithStream(stream, 4);
+
+    stream.end();
+
+    expect(() => {
+      tagsManager.push(0, 0);
+    }).toThrowError("Stream is not writable. Reinstantiate the TagsManagerWithStream with a writable stream.");
+  });
+
   it("cleans up the stream after writing", () => {
-    spyOn(stream, "removeAllListeners");
+    spyOn(stream, "removeAllListeners").and.callThrough();
 
     const tagsManager = new TagsManagerWithStream(stream, 4);
 
