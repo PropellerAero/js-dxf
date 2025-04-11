@@ -159,7 +159,7 @@ function compareFilesByHash(filepath1, filepath2) {
 }
 
 function setup(filename) {
-  const outputFilepath = `output/${filename}`;
-  const fixtureFilepath = `spec/fixtures/${filename}`;
+  const outputFilepath = path.join(process.cwd(), 'output', filename);
+  const fixtureFilepath = path.join(process.cwd(), 'spec', 'fixtures', filename);
   return { outputFilepath, fixtureFilepath };
 }
