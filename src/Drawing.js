@@ -23,6 +23,7 @@ const Ellipse = require("./Ellipse");
 const TagsManager = require("./TagsManager");
 const Handle = require("./Handle");
 const Mesh = require("./Mesh");
+const TagsManagerWithStream = require("./TagsManagerWithStream");
 
 class Drawing {
     constructor() {
@@ -486,9 +487,7 @@ class Drawing {
         this.dictionary.addChildDictionary("ACAD_GROUP", d);
     }
 
-    _tagsManager() {
-        const manager = new TagsManager();
-
+    _tagsManager(manager) {
         // Setup
         const blockRecordTable = new Table("BLOCK_RECORD");
         const blocks = Object.values(this.blocks);
@@ -557,11 +556,11 @@ class Drawing {
     }
 
     toDxfString() {
-        return this._tagsManager().toDxfString();
+        return this._tagsManager(new TagsManager()).toDxfString();
     }
 
     writeDxfToStream(stream) {
-        return this._tagsManager().writeToStream(stream);
+        return this._tagsManager(new TagsManagerWithStream(stream)).writeToStream();
     }
 }
 

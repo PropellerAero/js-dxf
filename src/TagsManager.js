@@ -1,4 +1,3 @@
-const WRITE_CHUNK = 2000;
 class TagsManager {
     constructor() {
         this.lines = [];
@@ -42,28 +41,6 @@ class TagsManager {
 
     toDxfString() {
         return this.lines.join("\n");
-    }
-
-    writeToStream(stream) {
-        this.stream = stream;
-        this.stream.on("drain", () => this.resumeStream());
-        this.resumeStream();
-    }
-
-    resumeStream() {
-        while (true) {
-            if (this.lines.length === 0) {
-                this.stream.end();
-                return;
-            }
-
-            const lineChunk = this.lines.splice(0, WRITE_CHUNK);
-            const chunk = lineChunk.join("\n");
-            const shouldContinue = this.stream.write(chunk + "\n");
-            if (!shouldContinue) {
-                return;
-            }
-        }
     }
 }
 
