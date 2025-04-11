@@ -7,19 +7,19 @@ class DimStyleTable extends Table {
         this.subclassMarkers.push("AcDbDimStyleTable");
     }
 
-    tags(manager) {
-        manager.push(0, "TABLE");
-        manager.push(2, this.name);
-        DatabaseObject.prototype.tags.call(this, manager);
-        manager.push(70, this.elements.length);
+    async tags(manager) {
+        await manager.push(0, "TABLE");
+        await manager.push(2, this.name);
+        await DatabaseObject.prototype.tags.call(this, manager);
+        await manager.push(70, this.elements.length);
         /* DIMTOL */
-        manager.push(71, 1);
+        await manager.push(71, 1);
 
         for (const e of this.elements) {
-            e.tags(manager);
+            await e.tags(manager);
         }
 
-        manager.push(0, "ENDTAB");
+        await manager.push(0, "ENDTAB");
     }
 }
 

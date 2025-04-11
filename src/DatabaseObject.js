@@ -18,11 +18,12 @@ class DatabaseObject {
      *
      * @param {TagsManager} manager
      */
-    tags(manager) {
-        manager.push(5, this.handle);
-        manager.push(330, this.ownerObjectHandle);
+    async tags(manager) {
+        await manager.push(5, this.handle);
+        await manager.push(330, this.ownerObjectHandle);
+
         for (const s of this.subclassMarkers) {
-            manager.push(100, s);
+            await manager.push(100, s);
         }
     }
 }

@@ -12,17 +12,17 @@ class Table extends DatabaseObject {
         this.elements.push(element);
     }
 
-    tags(manager) {
-        manager.push(0, "TABLE");
-        manager.push(2, this.name);
-        super.tags(manager);
-        manager.push(70, this.elements.length);
+    async tags(manager) {
+        await manager.push(0, "TABLE");
+        await manager.push(2, this.name);
+        await super.tags(manager);
+        await manager.push(70, this.elements.length);
 
-        this.elements.forEach((element) => {
-            element.tags(manager);
-        });
+        for (const element of this.elements) {
+            await element.tags(manager);
+        }
 
-        manager.push(0, "ENDTAB");
+        await manager.push(0, "ENDTAB");
     }
 }
 
