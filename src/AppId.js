@@ -10,7 +10,7 @@ class AppId extends DatabaseObject {
         await manager.push(0, "APPID");
         await super.tags(manager);
         await manager.push(2, this.name);
-        await /* No flags set */
+        /* No flags set */
         await manager.push(70, 0);
     }
 }
