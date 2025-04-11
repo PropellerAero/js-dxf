@@ -10,7 +10,7 @@ class Block extends DatabaseObject {
 
     async tags(manager) {
         await manager.push(0, "BLOCK");
-        super.tags(manager);
+        await super.tags(manager);
         await manager.push(2, this.name);
         /* No flags set */
         await manager.push(70, 0);
