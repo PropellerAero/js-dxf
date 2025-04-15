@@ -22,20 +22,20 @@ class Layer extends DatabaseObject {
         this.trueColor = -1;
     }
 
-    tags(manager) {
-        manager.push(0, "LAYER");
-        super.tags(manager);
-        manager.push(2, this.name);
-        if (this.trueColor !== -1) manager.push(420, this.trueColor);
-        else manager.push(62, this.colorNumber);
+    async tags(manager) {
+        await manager.push(0, "LAYER");
+        await super.tags(manager);
+        await manager.push(2, this.name);
+        if (this.trueColor !== -1) await manager.push(420, this.trueColor);
+        else await manager.push(62, this.colorNumber);
 
-        manager.push(70, 0);
-        if (this.lineTypeName) manager.push(6, this.lineTypeName);
+        await manager.push(70, 0);
+        if (this.lineTypeName) await manager.push(6, this.lineTypeName);
 
         /* Hard-pointer handle to PlotStyleName object; seems mandatory, but any value seems OK,
          * including 0.
          */
-        manager.push(390, 1);
+        await manager.push(390, 1);
     }
 
     setTrueColor(color) {
@@ -51,10 +51,10 @@ class Layer extends DatabaseObject {
         return this.shapes;
     }
 
-    shapesTags(space, manager) {
+    async shapesTags(space, manager) {
         for (const shape of this.shapes) {
             shape.ownerObjectHandle = space.handle;
-            shape.tags(manager);
+            await shape.tags(manager);
         }
     }
 }

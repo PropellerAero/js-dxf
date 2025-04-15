@@ -8,4 +8,6 @@ package-lock.json
 pnpm-lock.yaml
 **.DS_Store
 **.dxf
+!spec/fixtures/**.dxf
 yarn.lock
+wallaby.js

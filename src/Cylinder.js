@@ -32,16 +32,16 @@ class Cylinder extends DatabaseObject {
             (this.extrusionDirectionZ = extrusionDirectionZ);
     }
 
-    tags(manager) {
-        manager.push(0, "CIRCLE");
-        super.tags(manager);
-        manager.push(8, this.layer.name);
-        manager.point(this.x, this.y, this.z);
-        manager.push(40, this.r);
-        manager.push(39, this.thickness);
-        manager.push(210, this.extrusionDirectionX);
-        manager.push(220, this.extrusionDirectionY);
-        manager.push(230, this.extrusionDirectionZ);
+    async tags(manager) {
+        await manager.push(0, "CIRCLE");
+        await super.tags(manager);
+        await manager.push(8, this.layer.name);
+        await manager.point(this.x, this.y, this.z);
+        await manager.push(40, this.r);
+        await manager.push(39, this.thickness);
+        await manager.push(210, this.extrusionDirectionX);
+        await manager.push(220, this.extrusionDirectionY);
+        await manager.push(230, this.extrusionDirectionZ);
     }
 }
 

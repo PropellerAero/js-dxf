@@ -39,7 +39,7 @@ declare module "@propelleraero/dxf-writer" {
 
     abstract class Block {
         constructor(name: string);
-        tags(manager: TagsManager): void;
+        tags(manager: TagsManager): Promise<void>;
     }
 
     export abstract class TagsManager extends RenderableToDxf {
@@ -73,7 +73,7 @@ declare module "@propelleraero/dxf-writer" {
             startAngle: number,
             endAngle: number
         );
-        tags(manager: TagsManager): void;
+        tags(manager: TagsManager): Promise<void>;
     }
 
     export class Circle extends RenderableToDxf {
@@ -87,7 +87,7 @@ declare module "@propelleraero/dxf-writer" {
          * @param {number} r - radius
          */
         constructor(x1: number, y1: number, r: number);
-        tags(manager: TagsManager): void;
+        tags(manager: TagsManager): Promise<void>;
     }
 
     export class Cylinder extends RenderableToDxf {
@@ -120,7 +120,7 @@ declare module "@propelleraero/dxf-writer" {
             extrusionDirectionY: number,
             extrusionDirectionZ: number
         );
-        tags(manager: TagsManager): void;
+        tags(manager: TagsManager): Promise<void>;
     }
 
     export class Face extends RenderableToDxf {
@@ -151,7 +151,7 @@ declare module "@propelleraero/dxf-writer" {
             y4: number,
             z4: number
         );
-        tags(manager: TagsManager): void;
+        tags(manager: TagsManager): Promise<void>;
     }
 
     export class Layer extends RenderableToDxf {
@@ -168,7 +168,7 @@ declare module "@propelleraero/dxf-writer" {
         addShape(shape: RenderableToDxf): void;
         getShapes(): Array<RenderableToDxf>;
         shapesTags(space: Block, manager: TagsManager): void;
-        tags(manager: TagsManager): void;
+        tags(manager: TagsManager): Promise<void>;
     }
 
     export class Line extends RenderableToDxf {
@@ -178,7 +178,7 @@ declare module "@propelleraero/dxf-writer" {
         public y2: number;
 
         constructor(x1: number, y1: number, x2: number, y2: number);
-        tags(manager: TagsManager): void;
+        tags(manager: TagsManager): Promise<void>;
     }
 
     export class LineType extends RenderableToDxf {
@@ -191,7 +191,7 @@ declare module "@propelleraero/dxf-writer" {
          * @param {array} elements - if elem > 0 it is a line, if elem < 0 it is gap, if elem == 0.0 it is a
          */
         constructor(name: string, description: string, elements: Array<number>);
-        tags(manager: TagsManager): void;
+        tags(manager: TagsManager): Promise<void>;
         getElementsSum(): number;
     }
 
@@ -200,21 +200,21 @@ declare module "@propelleraero/dxf-writer" {
         public y: number;
 
         constructor(x: number, y: number);
-        tags(manager: TagsManager): void;
+        tags(manager: TagsManager): Promise<void>;
     }
 
     export class Polyline extends RenderableToDxf {
         public points: Array<Point2D>;
 
         constructor(points: Array<Point2D>);
-        tags(manager: TagsManager): void;
+        tags(manager: TagsManager): Promise<void>;
     }
 
     export class Polyline3D extends RenderableToDxf {
         public points: Array<Point3D>;
 
         constructor(points: Array<Point3D>);
-        tags(manager: TagsManager): void;
+        tags(manager: TagsManager): Promise<void>;
     }
 
     export class Text extends RenderableToDxf {
@@ -243,7 +243,7 @@ declare module "@propelleraero/dxf-writer" {
             horizontalAlignment?: HorizontalAlignment,
             verticalAlignment?: VerticalAlignment
         );
-        tags(manager: TagsManager): void;
+        tags(manager: TagsManager): Promise<void>;
     }
 
     export class Mesh extends RenderableToDxf {
@@ -251,7 +251,7 @@ declare module "@propelleraero/dxf-writer" {
         public faceIndices: number[][];
 
         constructor(vertices: number[][], faceIndices: number[][]);
-        tags(manager: TagsManager): void;
+        tags(manager: TagsManager): Promise<void>;
     }
 
     export type ACIKey =
@@ -455,9 +455,9 @@ declare module "@propelleraero/dxf-writer" {
          */
         setUnits(unit: Unit): Drawing;
 
-        toDxfString(): string;
+        toDxfString(): Promise<string>;
 
-        writeDxfToStream(stream: Writable): void;
+        writeDxfToStream(stream: Writable): Promise<void>;
 
         /**
          * AutoCAD Color Index (ACI)

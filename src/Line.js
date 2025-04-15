@@ -9,16 +9,16 @@ class Line extends DatabaseObject {
         this.y2 = y2;
     }
 
-    tags(manager) {
+    async tags(manager) {
         //https://www.autodesk.com/techpubs/autocad/acadr14/dxf/line_al_u05_c.htm
-        manager.push(0, "LINE");
-        super.tags(manager);
-        manager.push(8, this.layer.name);
-        manager.point(this.x1, this.y1);
+        await manager.push(0, "LINE");
+        await super.tags(manager);
+        await manager.push(8, this.layer.name);
+        await manager.point(this.x1, this.y1);
 
-        manager.push(11, this.x2);
-        manager.push(21, this.y2);
-        manager.push(31, 0);
+        await manager.push(11, this.x2);
+        await manager.push(21, this.y2);
+        await manager.push(31, 0);
     }
 }
 

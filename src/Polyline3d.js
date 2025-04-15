@@ -17,23 +17,23 @@ class Polyline3d extends DatabaseObject {
         this.seqendHandle = Handle.next();
     }
 
-    tags(manager) {
-        manager.push(0, "POLYLINE");
-        super.tags(manager);
-        manager.push(8, this.layer.name);
-        manager.push(66, 1);
-        manager.push(70, 0);
-        manager.point(0, 0);
+    async tags(manager) {
+        await manager.push(0, "POLYLINE");
+        await super.tags(manager);
+        await manager.push(8, this.layer.name);
+        await manager.push(66, 1);
+        await manager.push(70, 0);
+        await manager.point(0, 0);
 
-        this.verticies.forEach((vertex) => {
+        for (const vertex of this.verticies) {
             vertex.layer = this.layer;
-            vertex.tags(manager);
-        });
+            await vertex.tags(manager);
+        }
 
-        manager.push(0, "SEQEND");
-        manager.push(5, this.seqendHandle);
-        manager.push(100, "AcDbEntity");
-        manager.push(8, this.layer.name);
+        await manager.push(0, "SEQEND");
+        await manager.push(5, this.seqendHandle);
+        await manager.push(100, "AcDbEntity");
+        await manager.push(8, this.layer.name);
     }
 }
 

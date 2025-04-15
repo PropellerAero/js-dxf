@@ -14,12 +14,12 @@ class Vertex extends DatabaseObject {
         this.z = z;
     }
 
-    tags(manager) {
-        manager.push(0, "VERTEX");
-        super.tags(manager);
-        manager.push(8, this.layer.name);
-        manager.point(this.x, this.y, this.z);
-        manager.push(70, 32);
+    async tags(manager) {
+        await manager.push(0, "VERTEX");
+        await super.tags(manager);
+        await manager.push(8, this.layer.name);
+        await manager.point(this.x, this.y, this.z);
+        await manager.push(70, 32);
     }
 }
 

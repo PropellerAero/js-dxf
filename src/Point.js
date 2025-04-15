@@ -7,12 +7,12 @@ class Point extends DatabaseObject {
         this.y = y;
     }
 
-    tags(manager) {
+    async tags(manager) {
         //https://www.autodesk.com/techpubs/autocad/acadr14/dxf/point_al_u05_c.htm
-        manager.push(0, "POINT");
-        super.tags(manager);
-        manager.push(8, this.layer.name);
-        manager.point(this.x, this.y);
+        await manager.push(0, "POINT");
+        await super.tags(manager);
+        await manager.push(8, this.layer.name);
+        await manager.point(this.x, this.y);
     }
 }
 
