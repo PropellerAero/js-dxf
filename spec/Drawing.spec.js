@@ -1,4 +1,5 @@
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 
 const Drawing = require("../src/Drawing");
@@ -7,15 +8,18 @@ const Layer = require("../src/Layer");
 const exp = require("constants");
 
 describe("Drawing", function () {
+  let outputDir;
 
   beforeAll(() => {
-    if (!fs.existsSync("output")) {
-      fs.mkdirSync("output");
+    outputDir = path.join(os.tmpdir(), "output");
+
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir);
     }
   });
 
   it("can be just blank", async function () {
-    const { outputFilepath, fixtureFilepath } = setup("blank.dxf");
+    const { outputFilepath, fixtureFilepath } = setup(outputDir, "blank.dxf");
     const d = new Drawing();
 
     fs.writeFileSync(outputFilepath, await d.toDxfString());
@@ -26,7 +30,7 @@ describe("Drawing", function () {
   });
 
   it("can add a line type", async function () {
-    const { outputFilepath, fixtureFilepath } = setup("add_line_type.dxf");
+    const { outputFilepath, fixtureFilepath } = setup(outputDir, "add_line_type.dxf");
     const d = new Drawing();
 
     d.addLineType("MyDashed", "_ _ _ _ _ _", [0.25, -0.25]);
@@ -42,7 +46,7 @@ describe("Drawing", function () {
   });
 
   it("can add a layer", async function () {
-    const { outputFilepath, fixtureFilepath } = setup("add_layer.dxf");
+    const { outputFilepath, fixtureFilepath } = setup(outputDir, "add_layer.dxf");
     var d = new Drawing();
 
     d.addLineType("MyDashed", "_ _ _ _ _ _", [0.25, -0.25]);
@@ -68,7 +72,7 @@ describe("Drawing", function () {
   });
 
   it("can draw a line", async function () {
-    const { outputFilepath, fixtureFilepath } = setup("line_0_0_100_100.dxf");
+    const { outputFilepath, fixtureFilepath } = setup(outputDir, "line_0_0_100_100.dxf");
     var d = new Drawing();
 
     d.drawLine(0, 0, 100, 100);
@@ -81,7 +85,7 @@ describe("Drawing", function () {
   });
 
   it("can draw a point", async function () {
-    const { outputFilepath, fixtureFilepath } = setup("point.dxf");
+    const { outputFilepath, fixtureFilepath } = setup(outputDir, "point.dxf");
     var d = new Drawing();
 
     d.drawPoint(50, 50, 50);
@@ -94,7 +98,7 @@ describe("Drawing", function () {
   });
 
   it("can draw a mesh", async function () {
-    const { outputFilepath, fixtureFilepath } = setup("mesh-simple.dxf");
+    const { outputFilepath, fixtureFilepath } = setup(outputDir, "mesh-simple.dxf");
 
     var d = new Drawing();
 
@@ -119,7 +123,7 @@ describe("Drawing", function () {
   });
 
   it("can draw a mesh to stream", async function () {
-    const { outputFilepath, fixtureFilepath } = setup("mesh-simple-stream.dxf");
+    const { outputFilepath, fixtureFilepath } = setup(outputDir, "mesh-simple-stream.dxf");
     const stream = new fs.createWriteStream(outputFilepath);
 
     var d = new Drawing();
@@ -158,8 +162,8 @@ function compareFilesByHash(filepath1, filepath2) {
   return getFile(filepath1) === getFile(filepath2);
 }
 
-function setup(filename) {
-  const outputFilepath = path.join(process.cwd(), 'output', filename);
-  const fixtureFilepath = path.join(process.cwd(), 'spec', 'fixtures', filename);
+function setup(outputDir, filename) {
+  const outputFilepath = path.join(outputDir, filename);
+  const fixtureFilepath = path.join(__dirname, 'fixtures', filename);
   return { outputFilepath, fixtureFilepath };
 }

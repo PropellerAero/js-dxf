@@ -8,6 +8,10 @@ class Handle {
     static peek() {
         return (Handle.seed + 1).toString(16).toUpperCase();
     }
+
+    static reset() {
+        Handle.seed = 0;
+    }
 }
 
 module.exports = Handle;

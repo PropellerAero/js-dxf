@@ -27,6 +27,16 @@ const TagsManagerWithStream = require("./TagsManagerWithStream");
 
 class Drawing {
   constructor() {
+    /**
+     * This is probably a good practice to ensure that:
+     * 1. We are only producing, as a consumer, a single DXF file at a time.
+     * 2. Reset the handle to 0 when we are creating a new drawing.
+     *
+     * Though, this should probably really not be a singleton and just be instantiated
+     * here in the constructor and passed around.
+     */
+    Handle.reset();
+
     this.layers = {};
     this.activeLayer = null;
     this.lineTypes = {};
