@@ -1,6 +1,10 @@
 const Drawing = require('./../src/Drawing');
 const fs = require('fs');
 
+/**
+ * @param {Drawing} d
+ * @returns {void}
+ */
 function draw(d) {
   d.drawText(10, 0, 10, 0, 'Hello World'); // draw text in the default layer named "0"
   d.addLayer('l_green', Drawing.ACI.GREEN, 'CONTINUOUS');
@@ -13,6 +17,10 @@ function draw(d) {
    .drawCircle(50, -30, 25);
 }
 
+/**
+ * @param {StreamableDrawing} d
+ * @returns {Promise<void>}
+ */
 async function asyncDraw(d) {
   await d.drawText(10, 0, 10, 0, 'Hello World'); // draw text in the default layer named "0"
   d.addLayer('l_green', Drawing.ACI.GREEN, 'CONTINUOUS');

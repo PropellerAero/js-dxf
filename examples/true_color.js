@@ -1,6 +1,10 @@
 const Drawing = require('./../src/Drawing');
 const fs = require('fs');
 
+/**
+ * @param {Drawing} d
+ * @returns {void}
+ */
 function draw(d) {
   d.addLayer('l_firebrick', 0, 'CONTINUOUS');
   d.setActiveLayer('l_firebrick');
@@ -23,6 +27,10 @@ function draw(d) {
   d.drawCircle(10, -10, 5);
 }
 
+/**
+ * @param {StreamableDrawing} d
+ * @returns {Promise<void>}
+ */
 async function asyncDraw(d) {
   d.addLayer('l_firebrick', 0, 'CONTINUOUS');
   d.setActiveLayer('l_firebrick');

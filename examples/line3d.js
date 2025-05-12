@@ -1,6 +1,10 @@
 const Drawing = require('./../src/Drawing');
 const fs = require('fs');
 
+/**
+ * @param {Drawing} d
+ * @returns {void}
+ */
 function draw(d) {
   d.setUnits('Yards').addLayer('l_green', Drawing.ACI.GREEN, 'CONTINUOUS');
   d.setActiveLayer('l_green');
@@ -11,6 +15,10 @@ function draw(d) {
    .drawLine3d(100, 0, 0, 50, 50, 50)
 }
 
+/**
+ * @param {StreamableDrawing} d
+ * @returns {Promise<void>}
+ */
 async function asyncDraw(d) {
   d.setUnits('Yards').addLayer('l_green', Drawing.ACI.GREEN, 'CONTINUOUS');
   d.setActiveLayer('l_green');

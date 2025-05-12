@@ -1,6 +1,10 @@
 const Drawing = require('./../src/Drawing');
 const fs = require('fs');
 
+/**
+ * @param {Drawing} d
+ * @returns {void}
+ */
 function draw(d) {
   d.setUnits('Decimeters');
   d.addLineType('DASHDOT', '_ . _ ', [0.5, -0.5, 0.0, -0.5]);
@@ -9,6 +13,10 @@ function draw(d) {
   d.drawCircle(0, 0, 20);
 }
 
+/**
+ * @param {StreamableDrawing} d
+ * @returns {Promise<void>}
+ */
 async function asyncDraw(d) {
   d.setUnits('Decimeters');
   d.addLineType('DASHDOT', '_ . _ ', [0.5, -0.5, 0.0, -0.5]);

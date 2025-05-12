@@ -1,6 +1,10 @@
 const Drawing = require('./../src/Drawing');
 const fs = require('fs');
 
+/**
+ * @param {Drawing} d
+ * @returns {void}
+ */
 function draw(d) {
   // The degree 3 spline will be "rounder" than degree 2
   d.drawSpline([[0, 0], [10, 10], [20, 10], [30, 0]], 2);
@@ -17,6 +21,10 @@ function draw(d) {
   d.drawSpline([[0, 0], [0, 10], [15, 15], [30, 10], [30, 0]], 2, [0, 0, 0, 1, 1, 2, 2, 2]);
 }
 
+/**
+ * @param {StreamableDrawing} d
+ * @returns {Promise<void>}
+ */
 async function asyncDraw(d) {
   // The degree 3 spline will be "rounder" than degree 2
   await d.drawSpline([[0, 0], [10, 10], [20, 10], [30, 0]], 2);

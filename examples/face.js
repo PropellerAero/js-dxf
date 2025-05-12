@@ -1,6 +1,10 @@
 const Drawing = require('./../src/Drawing');
 const fs = require('fs');
 
+/**
+ * @param {Drawing} d
+ * @returns {void}
+ */
 function draw(d) {
   d.addLayer('face_example', Drawing.ACI.GREEN, 'CONTINUOUS');
   d.setActiveLayer('face_example');
@@ -12,6 +16,10 @@ function draw(d) {
     0, 0, 0)
 }
 
+/**
+ * @param {StreamableDrawing} d
+ * @returns {Promise<void>}
+ */
 async function asyncDraw(d) {
   d.addLayer('face_example', Drawing.ACI.GREEN, 'CONTINUOUS');
   d.setActiveLayer('face_example');

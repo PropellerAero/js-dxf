@@ -7,7 +7,7 @@ class TagsManager {
      *
      * @param {number} x
      * @param {number} y
-     * @param {number} z
+     * @param {number | undefined} z
      */
     point(x, y, z = 0) {
         this.push(10, x);

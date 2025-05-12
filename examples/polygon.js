@@ -1,6 +1,10 @@
 const Drawing = require("./../src/Drawing");
 const fs = require("fs");
 
+/**
+ * @param {Drawing} d
+ * @returns {void}
+ */
 function draw(d) {
   d.addLayer("inscribed_polygon", Drawing.ACI.YELLOW, "CONTINUOUS");
   d.setActiveLayer("inscribed_polygon");
@@ -17,6 +21,10 @@ function draw(d) {
   d.drawText(25, 0, 1, 0, "Circumscribed");
 }
 
+/**
+ * @param {StreamableDrawing} d
+ * @returns {Promise<void>}
+ */
 async function asyncDraw(d) {
   d.addLayer("inscribed_polygon", Drawing.ACI.YELLOW, "CONTINUOUS");
   d.setActiveLayer("inscribed_polygon");
