@@ -1,5 +1,6 @@
 import { Writable } from "stream";
 
+// TODO: Update types
 declare module "@propelleraero/dxf-writer" {
     export type Unit =
         | "Unitless"
@@ -456,8 +457,6 @@ declare module "@propelleraero/dxf-writer" {
         setUnits(unit: Unit): Drawing;
 
         toDxfString(): Promise<string>;
-
-        writeDxfToStream(stream: Writable): Promise<void>;
 
         /**
          * AutoCAD Color Index (ACI)

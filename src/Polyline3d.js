@@ -1,6 +1,8 @@
 const DatabaseObject = require("./DatabaseObject");
 const Handle = require("./Handle");
 const Vertex = require("./Vertex");
+const TagsManager = require("./TagsManager");
+const TagsManagerWithStream = require("./TagsManagerWithStream");
 
 class Polyline3d extends DatabaseObject {
     /**
@@ -17,9 +19,35 @@ class Polyline3d extends DatabaseObject {
         this.seqendHandle = Handle.next();
     }
 
-    async tags(manager) {
+    /**
+     * @param {TagsManager} manager
+     */
+    tags(manager) {
+        manager.push(0, "POLYLINE");
+        super.tags(manager);
+        manager.push(8, this.layer.name);
+        manager.push(66, 1);
+        manager.push(70, 0);
+        manager.point(0, 0);
+
+        for (const vertex of this.verticies) {
+            vertex.layer = this.layer;
+            vertex.tags(manager);
+        }
+
+        manager.push(0, "SEQEND");
+        manager.push(5, this.seqendHandle);
+        manager.push(100, "AcDbEntity");
+        manager.push(8, this.layer.name);
+    }
+
+    /**
+     * @param {TagsManagerWithStream} manager
+     * @returns {Promise<void>}
+     */
+    async asyncTags(manager) {
         await manager.push(0, "POLYLINE");
-        await super.tags(manager);
+        await super.asyncTags(manager);
         await manager.push(8, this.layer.name);
         await manager.push(66, 1);
         await manager.push(70, 0);
@@ -27,7 +55,7 @@ class Polyline3d extends DatabaseObject {
 
         for (const vertex of this.verticies) {
             vertex.layer = this.layer;
-            await vertex.tags(manager);
+            await vertex.asyncTags(manager);
         }
 
         await manager.push(0, "SEQEND");

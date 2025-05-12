@@ -5,7 +5,7 @@ const path = require("path");
 const Drawing = require("../src/Drawing");
 const LineType = require("../src/LineType");
 const Layer = require("../src/Layer");
-const exp = require("constants");
+const Handle = require("../src/Handle");
 
 describe("Drawing", function () {
   let outputDir;
@@ -18,52 +18,42 @@ describe("Drawing", function () {
     }
   });
 
-  it("can be just blank", async function () {
-    const { outputFilepath, fixtureFilepath } = setup(outputDir, "blank.dxf");
-    const d = new Drawing();
-
-    fs.writeFileSync(outputFilepath, await d.toDxfString());
-
-    expect(
-      compareFilesByHash(outputFilepath, fixtureFilepath)
-    ).toBe(true);
+  beforeEach(() => {
+    Handle.reset();
   });
 
-  it("can add a line type", async function () {
-    const { outputFilepath, fixtureFilepath } = setup(outputDir, "add_line_type.dxf");
+  it("can be just blank", function () {
+    const { fixtureFilepath } = setup("blank.dxf");
+    const d = new Drawing();
+
+    expect(d.toDxfString()).toEqual(getFile(fixtureFilepath));
+  });
+
+  it("can add a line type", function () {
+    const { fixtureFilepath } = setup("add_line_type.dxf");
     const d = new Drawing();
 
     d.addLineType("MyDashed", "_ _ _ _ _ _", [0.25, -0.25]);
     d.addLineType("MyCont", "___________", []);
 
     expect(d.lineTypes["MyCont"]).toEqual(jasmine.any(LineType));
-
-    fs.writeFileSync(outputFilepath, await d.toDxfString());
-
-    expect(
-      compareFilesByHash(outputFilepath, fixtureFilepath)
-    ).toBe(true);
+    expect(d.toDxfString()).toEqual(getFile(fixtureFilepath));
   });
 
-  it("can add a layer", async function () {
-    const { outputFilepath, fixtureFilepath } = setup(outputDir, "add_layer.dxf");
-    var d = new Drawing();
+  it("can add a layer", function () {
+    const { fixtureFilepath } = setup("add_layer.dxf");
+    const d = new Drawing();
 
     d.addLineType("MyDashed", "_ _ _ _ _ _", [0.25, -0.25]);
     d.addLineType("MyCont", "___________", []);
     d.addLayer("MyLayer", Drawing.ACI.GREEN, "MyDashed");
 
     expect(d.layers["MyLayer"]).toEqual(jasmine.any(Layer));
-
-    fs.writeFileSync(outputFilepath, await d.toDxfString());
-
-    expect(
-      compareFilesByHash(outputFilepath, fixtureFilepath)
-    ).toBe(true);
+    expect(d.toDxfString()).toEqual(getFile(fixtureFilepath));
   });
 
   it("cannot add a layer with a bad name", function () {
-    var d = new Drawing();
+    const d = new Drawing();
     d.addLineType("MyDashed", "_ _ _ _ _ _", [0.25, -0.25]);
     d.addLineType("MyCont", "___________", []);
     expect(() =>
@@ -71,36 +61,28 @@ describe("Drawing", function () {
     ).toThrowError();
   });
 
-  it("can draw a line", async function () {
-    const { outputFilepath, fixtureFilepath } = setup(outputDir, "line_0_0_100_100.dxf");
-    var d = new Drawing();
+  it("can draw a line", function () {
+    const { fixtureFilepath } = setup("line_0_0_100_100.dxf");
+    const d = new Drawing();
 
     d.drawLine(0, 0, 100, 100);
 
-    fs.writeFileSync(outputFilepath, await d.toDxfString());
-
-    expect(
-      compareFilesByHash(outputFilepath, fixtureFilepath)
-    ).toBe(true);
+    expect(d.toDxfString()).toEqual(getFile(fixtureFilepath));
   });
 
-  it("can draw a point", async function () {
-    const { outputFilepath, fixtureFilepath } = setup(outputDir, "point.dxf");
-    var d = new Drawing();
+  it("can draw a point", function () {
+    const { fixtureFilepath } = setup("point.dxf");
+    const d = new Drawing();
 
     d.drawPoint(50, 50, 50);
 
-    fs.writeFileSync(outputFilepath, await d.toDxfString());
-
-    expect(
-      compareFilesByHash(outputFilepath, fixtureFilepath)
-    ).toBe(true);
+    expect(d.toDxfString()).toEqual(getFile(fixtureFilepath));
   });
 
-  it("can draw a mesh", async function () {
-    const { outputFilepath, fixtureFilepath } = setup(outputDir, "mesh-simple.dxf");
+  it("can draw a mesh", function () {
+    const { fixtureFilepath } = setup("mesh-simple.dxf");
 
-    var d = new Drawing();
+    const d = new Drawing();
 
     d.drawMesh(
       [
@@ -115,42 +97,7 @@ describe("Drawing", function () {
       ]
     );
 
-    fs.writeFileSync(outputFilepath, await d.toDxfString());
-
-    expect(
-      compareFilesByHash(outputFilepath, fixtureFilepath)
-    ).toBe(true);
-  });
-
-  it("can draw a mesh to stream", async function () {
-    const { outputFilepath, fixtureFilepath } = setup(outputDir, "mesh-simple-stream.dxf");
-    const stream = new fs.createWriteStream(outputFilepath);
-
-    var d = new Drawing();
-
-    d.drawMesh(
-      [
-        [0, 0, 0],
-        [100, 0, 0],
-        [0, 100, 0],
-        [100, 100, 0],
-      ],
-      [
-        [0, 2, 3],
-        [0, 3, 1],
-      ]
-    );
-
-    await d.writeDxfToStream(stream);
-    stream.end();
-
-    await new Promise((resolve) => {
-      stream.on("finish", resolve);
-    });
-
-    expect(
-      compareFilesByHash(outputFilepath, fixtureFilepath)
-    ).toBe(true);
+    expect(d.toDxfString()).toEqual(getFile(fixtureFilepath));
   });
 });
 
@@ -158,12 +105,8 @@ function getFile(filePath) {
   return fs.readFileSync(filePath, 'utf-8');
 }
 
-function compareFilesByHash(filepath1, filepath2) {
-  return getFile(filepath1) === getFile(filepath2);
-}
-
-function setup(outputDir, filename) {
-  const outputFilepath = path.join(outputDir, filename);
+function setup(filename) {
   const fixtureFilepath = path.join(__dirname, 'fixtures', filename);
-  return { outputFilepath, fixtureFilepath };
+  const exampleFilepath = path.join(__dirname, '..', 'examples', filename);
+  return { fixtureFilepath, exampleFilepath };
 }

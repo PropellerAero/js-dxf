@@ -23,20 +23,9 @@ const Ellipse = require("./Ellipse");
 const TagsManager = require("./TagsManager");
 const Handle = require("./Handle");
 const Mesh = require("./Mesh");
-const TagsManagerWithStream = require("./TagsManagerWithStream");
 
 class Drawing {
   constructor() {
-    /**
-     * This is probably a good practice to ensure that:
-     * 1. We are only producing, as a consumer, a single DXF file at a time.
-     * 2. Reset the handle to 0 when we are creating a new drawing.
-     *
-     * Though, this should probably really not be a singleton and just be instantiated
-     * here in the constructor and passed around.
-     */
-    Handle.reset();
-
     this.layers = {};
     this.activeLayer = null;
     this.lineTypes = {};
@@ -497,7 +486,8 @@ class Drawing {
     this.dictionary.addChildDictionary("ACAD_GROUP", d);
   }
 
-  async _tagsManager(manager) {
+  _tagsManager() {
+    const manager = new TagsManager();
     // Setup
     const blockRecordTable = new Table("BLOCK_RECORD");
     const blocks = Object.values(this.blocks);
@@ -509,68 +499,64 @@ class Drawing {
     const layerTable = this._layerTable();
 
     // Header section start.
-    await manager.start("HEADER");
-    await manager.addHeaderVariable("HANDSEED", [[5, Handle.peek()]]);
+    manager.start("HEADER");
+    manager.addHeaderVariable("HANDSEED", [[5, Handle.peek()]]);
     const variables = Object.entries(this.headers);
     for (const v of variables) {
       const [name, values] = v;
-      await manager.addHeaderVariable(name, values);
+      manager.addHeaderVariable(name, values);
     }
-    await manager.end();
+    manager.end();
     // Header section end.
 
     // Classes section start.
-    await manager.start("CLASSES");
+    manager.start("CLASSES");
     // Empty CLASSES section for compatibility
-    await manager.end();
+    manager.end();
     // Classes section end.
 
     // Tables section start.
-    await manager.start("TABLES");
-    await ltypeTable.tags(manager);
-    await layerTable.tags(manager);
+    manager.start("TABLES");
+    ltypeTable.tags(manager);
+    layerTable.tags(manager);
     const tables = Object.values(this.tables);
     for (const t of tables) {
-      await t.tags(manager);
+      t.tags(manager);
     }
-    await blockRecordTable.tags(manager);
-    await manager.end();
+    blockRecordTable.tags(manager);
+    manager.end();
     // Tables section end.
 
     // Blocks section start.
-    await manager.start("BLOCKS");
+    manager.start("BLOCKS");
     for (const b of blocks) {
-      await b.tags(manager);
+      b.tags(manager);
     }
-    await manager.end();
+    manager.end();
     // Blocks section end.
 
     // Entities section start.
-    await manager.start("ENTITIES");
+    manager.start("ENTITIES");
     const layers = Object.values(this.layers);
     for (const l of layers) {
-      await l.shapesTags(this.modelSpace, manager);
+      l.shapesTags(this.modelSpace, manager);
     }
-    await manager.end();
+    manager.end();
     // Entities section end.
 
     // Objects section start.
-    await manager.start("OBJECTS");
-    await this.dictionary.tags(manager);
-    await manager.end();
+    manager.start("OBJECTS");
+    this.dictionary.tags(manager);
+    manager.end();
     // Objects section end.
 
-    await manager.push(0, "EOF");
+    manager.push(0, "EOF");
 
     return manager;
   }
 
-  async toDxfString() {
-    return (await this._tagsManager(new TagsManager())).toDxfString();
-  }
-
-  async writeDxfToStream(stream) {
-    return (await this._tagsManager(new TagsManagerWithStream(stream))).writeToStream();
+  toDxfString() {
+    return this._tagsManager().toDxfString();
   }
 }
 

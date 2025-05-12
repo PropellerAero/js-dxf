@@ -1,4 +1,6 @@
 const DatabaseObject = require("./DatabaseObject");
+const TagsManager = require("./TagsManager");
+const TagsManagerWithStream = require("./TagsManagerWithStream");
 
 class Ellipse extends DatabaseObject {
     /**
@@ -22,10 +24,32 @@ class Ellipse extends DatabaseObject {
         this.endAngle = endAngle;
     }
 
-    async tags(manager) {
+    /**
+     * @param {TagsManager} manager
+     */
+    tags(manager) {
+        // https://www.autodesk.com/techpubs/autocad/acadr14/dxf/ellipse_al_u05_c.htm
+        manager.push(0, "ELLIPSE");
+        super.tags(manager);
+        manager.push(8, this.layer.name);
+        manager.point(this.x, this.y);
+        manager.push(11, this.majorAxisX);
+        manager.push(21, this.majorAxisY);
+        manager.push(31, 0);
+
+        manager.push(40, this.axisRatio);
+        manager.push(41, this.startAngle);
+        manager.push(42, this.endAngle);
+    }
+
+    /**
+     * @param {TagsManagerWithStream} manager
+     * @returns {Promise<void>}
+     */
+    async asyncTags(manager) {
         // https://www.autodesk.com/techpubs/autocad/acadr14/dxf/ellipse_al_u05_c.htm
         await manager.push(0, "ELLIPSE");
-        await super.tags(manager);
+        await super.asyncTags(manager);
         await manager.push(8, this.layer.name);
         await manager.point(this.x, this.y);
         await manager.push(11, this.majorAxisX);

@@ -1,4 +1,6 @@
 const DatabaseObject = require("./DatabaseObject");
+const TagsManager = require("./TagsManager");
+const TagsManagerWithStream = require("./TagsManagerWithStream");
 
 class Spline extends DatabaseObject {
     /**
@@ -77,10 +79,52 @@ class Spline extends DatabaseObject {
         // const splineType = 1024 * closed + 128 * periodic + 8 * rational + 4 * planar + 2 * linear
     }
 
-    async tags(manager) {
+    /**
+     * @param {TagsManager} manager
+     */
+    tags(manager) {
+        // https://www.autodesk.com/techpubs/autocad/acad2000/dxf/spline_dxf_06.htm
+        manager.push(0, "SPLINE");
+        super.tags(manager);
+        manager.push(8, this.layer.name);
+
+        manager.push(210, 0.0);
+        manager.push(220, 0.0);
+        manager.push(230, 1.0);
+
+        manager.push(70, this.type);
+        manager.push(71, this.degree);
+        manager.push(72, this.knots.length);
+        manager.push(73, this.controlPoints.length);
+        manager.push(74, this.fitPoints.length);
+
+        manager.push(42, 1e-7);
+        manager.push(43, 1e-7);
+        manager.push(44, 1e-10);
+
+        for (const knot of knots) {
+            manager.push(40, knot);
+        }
+
+        if (this.weights) {
+            for (const weight of this.weights) {
+                manager.push(41, weight);
+            }
+        }
+
+        for (const point of this.controlPoints) {
+            manager.point(point[0], point[1]);
+        }
+    }
+
+    /**
+     * @param {TagsManagerWithStream} manager
+     * @returns {Promise<void>}
+     */
+    async asyncTags(manager) {
         // https://www.autodesk.com/techpubs/autocad/acad2000/dxf/spline_dxf_06.htm
         await manager.push(0, "SPLINE");
-        await super.tags(manager);
+        await super.asyncTags(manager);
         await manager.push(8, this.layer.name);
 
         await manager.push(210, 0.0);

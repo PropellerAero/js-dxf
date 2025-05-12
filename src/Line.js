@@ -1,4 +1,6 @@
 const DatabaseObject = require("./DatabaseObject");
+const TagsManager = require("./TagsManager");
+const TagsManagerWithStream = require("./TagsManagerWithStream");
 
 class Line extends DatabaseObject {
     constructor(x1, y1, x2, y2) {
@@ -9,10 +11,29 @@ class Line extends DatabaseObject {
         this.y2 = y2;
     }
 
-    async tags(manager) {
+    /**
+     * @param {TagsManager} manager
+     */
+    tags(manager) {
+        //https://www.autodesk.com/techpubs/autocad/acadr14/dxf/line_al_u05_c.htm
+        manager.push(0, "LINE");
+        super.tags(manager);
+        manager.push(8, this.layer.name);
+        manager.point(this.x1, this.y1);
+
+        manager.push(11, this.x2);
+        manager.push(21, this.y2);
+        manager.push(31, 0);
+    }
+
+    /**
+     * @param {TagsManagerWithStream} manager
+     * @returns {Promise<void>}
+     */
+    async asyncTags(manager) {
         //https://www.autodesk.com/techpubs/autocad/acadr14/dxf/line_al_u05_c.htm
         await manager.push(0, "LINE");
-        await super.tags(manager);
+        await super.asyncTags(manager);
         await manager.push(8, this.layer.name);
         await manager.point(this.x1, this.y1);
 

@@ -9,35 +9,34 @@ class TagsManager {
      * @param {number} y
      * @param {number} z
      */
-    async point(x, y, z = 0) {
-        await this.push(10, x);
-        await this.push(20, y);
-        await this.push(30, z);
+    point(x, y, z = 0) {
+        this.push(10, x);
+        this.push(20, y);
+        this.push(30, z);
     }
 
     /**
      *
      * @param {string} name The name of the section
      */
-    async start(name) {
-        await this.push(0, "SECTION");
-        await this.push(2, name);
+    start(name) {
+        this.push(0, "SECTION");
+        this.push(2, name);
     }
 
-    async end() {
-        await this.push(0, "ENDSEC");
+    end() {
+        this.push(0, "ENDSEC");
     }
 
-    async addHeaderVariable(name, tagsElements) {
-        await this.push(9, `$${name}`);
+    addHeaderVariable(name, tagsElements) {
+        this.push(9, `$${name}`);
         for (const tagsElement of tagsElements) {
-            await this.push(tagsElement[0], tagsElement[1]);
+            this.push(tagsElement[0], tagsElement[1]);
         };
     }
 
-    async push(code, value) {
+    push(code, value) {
         this._lines.push(code, value);
-        return Promise.resolve();
     }
 
     toDxfString() {

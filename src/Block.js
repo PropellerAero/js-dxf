@@ -1,4 +1,6 @@
 const DatabaseObject = require("./DatabaseObject");
+const TagsManager = require("./TagsManager");
+const TagsManagerWithStream = require("./TagsManagerWithStream");
 
 class Block extends DatabaseObject {
     constructor(name) {
@@ -8,9 +10,34 @@ class Block extends DatabaseObject {
         this.recordHandle = null;
     }
 
-    async tags(manager) {
+    /**
+     * @param {TagsManager} manager
+     */
+    tags(manager) {
+        manager.push(0, "BLOCK");
+        super.tags(manager);
+        manager.push(2, this.name);
+        /* No flags set */
+        manager.push(70, 0);
+        /* Block top left corner */
+        manager.point(0, 0);
+        manager.push(3, this.name);
+        /* xref path name - nothing */
+        manager.push(1, "");
+
+        //XXX dump content here
+
+        manager.push(0, "ENDBLK");
+        this.end.tags(manager);
+    }
+
+    /**
+     * @param {TagsManagerWithStream} manager
+     * @returns {Promise<void>}
+     */
+    async asyncTags(manager) {
         await manager.push(0, "BLOCK");
-        await super.tags(manager);
+        await super.asyncTags(manager);
         await manager.push(2, this.name);
         /* No flags set */
         await manager.push(70, 0);
@@ -23,7 +50,7 @@ class Block extends DatabaseObject {
         //XXX dump content here
 
         await manager.push(0, "ENDBLK");
-        await this.end.tags(manager);
+        await this.end.asyncTags(manager);
     }
 }
 
