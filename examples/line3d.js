@@ -11,7 +11,17 @@ function draw(d) {
    .drawLine3d(100, 0, 0, 50, 50, 50)
 }
 
-module.exports = { draw };
+async function asyncDraw(d) {
+  d.setUnits('Yards').addLayer('l_green', Drawing.ACI.GREEN, 'CONTINUOUS');
+  d.setActiveLayer('l_green');
+
+  await d.drawLine3d(50, 50, 50, 100, 100, 100);
+  await d.drawLine3d(100, 100, 100, 150, 50, 50);
+  await d.drawLine3d(150, 50, 50, 100, 0, 0);
+  await d.drawLine3d(100, 0, 0, 50, 50, 50);
+}
+
+module.exports = { asyncDraw, draw };
 
 if (require.main === module) {
   let d = new Drawing();

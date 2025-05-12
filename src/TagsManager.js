@@ -40,7 +40,7 @@ class TagsManager {
     }
 
     toDxfString() {
-        return this._lines.join("\n");
+        return this._lines.join("\n") + "\n";
     }
 }
 

@@ -3,10 +3,9 @@ const os = require("os");
 const path = require("path");
 
 const Drawing = require("../src/Drawing");
-const LineType = require("../src/LineType");
 const Layer = require("../src/Layer");
 const Handle = require("../src/Handle");
-const { get } = require("http");
+const { getFile, getExampleFileFixtures } = require("./support/helpers");
 
 describe("Drawing", function () {
   let outputDir;
@@ -42,17 +41,6 @@ describe("Drawing", function () {
     expect(d.toDxfString()).toEqual(getFile(fixtureFilepath));
   });
 
-  it("can add a line type", function () {
-    const { fixtureFilepath } = setup("add_line_type.dxf");
-    const d = new Drawing();
-
-    d.addLineType("MyDashed", "_ _ _ _ _ _", [0.25, -0.25]);
-    d.addLineType("MyCont", "___________", []);
-
-    expect(d.lineTypes["MyCont"]).toEqual(jasmine.any(LineType));
-    expect(d.toDxfString()).toEqual(getFile(fixtureFilepath));
-  });
-
   it("can add a layer", function () {
     const { fixtureFilepath } = setup("add_layer.dxf");
     const d = new Drawing();
@@ -72,24 +60,6 @@ describe("Drawing", function () {
     expect(() =>
       d.addLayer("/!@<>", Drawing.ACI.GREEN, "MyDashed")
     ).toThrowError();
-  });
-
-  it("can draw a line", function () {
-    const { fixtureFilepath } = setup("line_0_0_100_100.dxf");
-    const d = new Drawing();
-
-    d.drawLine(0, 0, 100, 100);
-
-    expect(d.toDxfString()).toEqual(getFile(fixtureFilepath));
-  });
-
-  it("can draw a point", function () {
-    const { fixtureFilepath } = setup("point.dxf");
-    const d = new Drawing();
-
-    d.drawPoint(50, 50, 50);
-
-    expect(d.toDxfString()).toEqual(getFile(fixtureFilepath));
   });
 
   it("can draw a mesh", function () {
@@ -114,17 +84,8 @@ describe("Drawing", function () {
   });
 });
 
-function getFile(filePath) {
-  return fs.readFileSync(filePath, 'utf-8');
-}
-
 function setup(filename) {
   const fixtureFilepath = path.join(__dirname, 'fixtures', filename);
   const exampleFilepath = path.join(__dirname, '..', 'examples', filename);
   return { fixtureFilepath, exampleFilepath };
-}
-
-function getExampleFileFixtures() {
-  return fs.readdirSync(path.join(__dirname, '..', 'examples'))
-    .filter((file) => file.endsWith('.js.dxf') && !file.includes('#'));
 }

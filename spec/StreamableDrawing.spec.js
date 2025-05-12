@@ -4,7 +4,7 @@ const path = require("path");
 
 const StreamableDrawing = require("../src/StreamableDrawing");
 const Handle = require("../src/Handle");
-const { get } = require("http");
+const { getFile, getExampleFileFixtures } = require("./support/helpers");
 
 describe("StreamableDrawing", function () {
   let outputDir;
@@ -19,6 +19,21 @@ describe("StreamableDrawing", function () {
 
   beforeEach(() => {
     Handle.reset();
+  });
+
+  getExampleFileFixtures().forEach((filename) => {
+    it(`can draw ${filename}`, async function () {
+      const { outputFilepath, exampleFilepath } = setup(outputDir, filename);
+      const d = new StreamableDrawing(outputFilepath);
+      const { asyncDraw } = require(exampleFilepath.replace(".dxf", ""));
+
+      await asyncDraw(d);
+
+      await d.end();
+
+
+      expect(getFile(outputFilepath)).toEqual(getFile(exampleFilepath));
+    });
   });
 
   it("can draw a mesh to stream", async function () {
@@ -40,22 +55,13 @@ describe("StreamableDrawing", function () {
 
     await d.end();
 
-    expect(
-      compareFiles(outputFilepath, fixtureFilepath)
-    ).toBe(true);
+    expect(getFile(outputFilepath)).toEqual(getFile(fixtureFilepath));
   });
 });
-
-function getFile(filePath) {
-  return fs.readFileSync(filePath, 'utf-8');
-}
-
-function compareFiles(filepath1, filepath2) {
-  return getFile(filepath1) === getFile(filepath2);
-}
 
 function setup(outputDir, filename) {
   const outputFilepath = path.join(outputDir, filename);
   const fixtureFilepath = path.join(__dirname, 'fixtures', filename);
-  return { outputFilepath, fixtureFilepath };
+  const exampleFilepath = path.join(__dirname, "..", "examples", filename);
+  return { outputFilepath, fixtureFilepath, exampleFilepath };
 }

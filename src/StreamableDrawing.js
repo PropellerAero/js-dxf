@@ -1,23 +1,34 @@
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
+const { once } = require('node:stream');
 
-const Drawing = require('./Drawing');
-const Handle = require('./Handle');
-const LineType = require("./LineType");
-const Layer = require("./Layer");
-const Table = require("./Table");
-const DimStyleTable = require("./DimStyleTable");
-const TextStyle = require("./TextStyle");
-const Viewport = require("./Viewport");
 const AppId = require("./AppId");
+const Arc = require("./Arc");
 const Block = require("./Block");
 const BlockRecord = require("./BlockRecord");
+const Circle = require("./Circle");
+const Cylinder = require("./Cylinder");
 const Dictionary = require("./Dictionary");
+const DimStyleTable = require("./DimStyleTable");
+const Drawing = require('./Drawing');
+const Ellipse = require("./Ellipse");
+const Face = require("./Face");
+const Handle = require('./Handle');
+const Layer = require("./Layer");
+const Line = require("./Line");
+const Line3d = require("./Line3d");
+const LineType = require("./LineType");
 const Mesh = require("./Mesh");
+const Point = require('./Point');
+const Polyline = require('./Polyline');
 const Polyline3d = require("./Polyline3d");
+const Spline = require("./Spline");
+const Table = require("./Table");
 const TagsManagerWithStream = require("./TagsManagerWithStream");
-const { once } = require('node:stream');
+const Text = require('./Text');
+const TextStyle = require("./TextStyle");
+const Viewport = require("./Viewport");
 
 class StreamableDrawing {
   constructor(filepath) {
@@ -66,6 +77,10 @@ class StreamableDrawing {
     return this;
   }
 
+  /**
+   * @param {string} name
+   * @returns {Table}
+   */
   addTable(name) {
     const table = new Table(name);
     this._tables[name] = table;
@@ -83,16 +98,241 @@ class StreamableDrawing {
   }
 
   /**
-   * @param {[number, number, number][]} vertices - Array of vertices like [ [x1, y1, z3], [x2, y2, z3]... ]
-   * @param {number[][]} faceIndices - Array of face indices
+   * @param {number} x1
+   * @param {number} y1
+   * @param {number} x2
+   * @param {number} y2
+   * @returns {Promise<StreamableDrawing>}
    */
-  async drawMesh(vertices, faceIndices) {
-    await this._activeLayer.writeShape(this.modelSpace, this._tempShapes.tagsManager, new Mesh(vertices, faceIndices));
+  async drawLine(x1, y1, x2, y2) {
+    await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Line(x1, y1, x2, y2));
     return this;
   }
 
   /**
+   * @param {number} x1
+   * @param {number} y1
+   * @param {number} z1
+   * @param {number} x2
+   * @param {number} y2
+   * @param {number} z2
+   * @returns {Promise<StreamableDrawing>}
+   */
+  async drawLine3d(x1, y1, z1, x2, y2, z2) {
+    await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Line3d(x1, y1, z1, x2, y2, z2));
+    return this;
+  }
+
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @returns {Promise<StreamableDrawing>}
+   */
+  async drawPoint(x, y) {
+    await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, Point(x, y));
+    return this;
+  }
+
+  /**
+   * @param {number} x1
+   * @param {number} y1
+   * @param {number} x2
+   * @param {number} y2
+   * @param {number} cornerLength
+   * @param {number} cornerBulge
+   * @returns {Promise<StreamableDrawing>}
+   */
+  async drawRect(x1, y1, x2, y2, cornerLength, cornerBulge) {
+    const w = x2 - x1;
+    const h = y2 - y1;
+    cornerBulge = cornerBulge || 0;
+    let p = null;
+    if (!cornerLength) {
+      p = new Polyline(
+        [
+          [x1, y1],
+          [x1, y1 + h],
+          [x1 + w, y1 + h],
+          [x1 + w, y1],
+        ],
+        true
+      );
+    } else {
+      p = new Polyline(
+        [
+          [x1 + w - cornerLength, y1, cornerBulge], // 1
+          [x1 + w, y1 + cornerLength], // 2
+          [x1 + w, y1 + h - cornerLength, cornerBulge], // 3
+          [x1 + w - cornerLength, y1 + h], // 4
+          [x1 + cornerLength, y1 + h, cornerBulge], // 5
+          [x1, y1 + h - cornerLength], // 6
+          [x1, y1 + cornerLength, cornerBulge], // 7
+          [x1 + cornerLength, y1], // 8
+        ],
+        true
+      );
+    }
+    await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, p);
+    return this;
+  }
+
+  /**
+   * Draw a regular convex polygon as a polyline entity.
+   *
+   * @see [Regular polygon | Wikipedia](https://en.wikipedia.org/wiki/Regular_polygon)
+   *
+   * @param {number} x - The X coordinate of the center of the polygon.
+   * @param {number} y - The Y coordinate of the center of the polygon.
+   * @param {number} numberOfSides - The number of sides.
+   * @param {number} radius - The radius.
+   * @param {number} rotation - The  rotation angle (in Degrees) of the polygon. By default 0.
+   * @param {boolean} circumscribed - If `true` is a polygon in which each side is a tangent to a circle.
+   * If `false` is a polygon in which all vertices lie on a circle. By default `false`.
+   *
+   * @returns {Promise<StreamableDrawing>}
+   */
+  async drawPolygon(
+    x,
+    y,
+    numberOfSides,
+    radius,
+    rotation = 0,
+    circumscribed = false
+  ) {
+    const angle = (2 * Math.PI) / numberOfSides;
+    const vertices = [];
+    let d = radius;
+    const rotationRad = (rotation * Math.PI) / 180;
+    if (circumscribed) d = radius / Math.cos(Math.PI / numberOfSides);
+    for (let i = 0; i < numberOfSides; i++) {
+      vertices.push([
+        x + d * Math.sin(rotationRad + i * angle),
+        y + d * Math.cos(rotationRad + i * angle),
+      ]);
+    }
+    await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Polyline(vertices, true));
+    return this;
+  }
+
+  /**
+   * @param {number} x1 - Center x
+   * @param {number} y1 - Center y
+   * @param {number} r - radius
+   * @param {number} startAngle - degree
+   * @param {number} endAngle - degree
+   * @returns {Promise<StreamableDrawing>}
+   */
+  async drawArc(x1, y1, r, startAngle, endAngle) {
+    await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Arc(x1, y1, r, startAngle, endAngle));
+    return this;
+  }
+
+  /**
+   * @param {number} x1 - Center x
+   * @param {number} y1 - Center y
+   * @param {number} r - radius
+   * @returns {Promise<StreamableDrawing>}
+   */
+  async drawCircle(x1, y1, r) {
+    await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Circle(x1, y1, r));
+    return this;
+  }
+
+  /**
+   * @param {number} x1 - Center x
+   * @param {number} y1 - Center y
+   * @param {number} z1 - Center z
+   * @param {number} r - radius
+   * @param {number} thickness - thickness
+   * @param {number} extrusionDirectionX - Extrusion Direction x
+   * @param {number} extrusionDirectionY - Extrusion Direction y
+   * @param {number} extrusionDirectionZ - Extrusion Direction z
+   * @returns {Promise<StreamableDrawing>}
+   */
+  async drawCylinder(
+    x1,
+    y1,
+    z1,
+    r,
+    thickness,
+    extrusionDirectionX,
+    extrusionDirectionY,
+    extrusionDirectionZ
+  ) {
+    await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Cylinder(
+      x1,
+      y1,
+      z1,
+      r,
+      thickness,
+      extrusionDirectionX,
+      extrusionDirectionY,
+      extrusionDirectionZ
+    )
+    );
+    return this;
+  }
+
+  /**
+   * @param {number} x1 - x
+   * @param {number} y1 - y
+   * @param {number} z1 - z
+   * @returns {Promise<StreamableDrawing>}
+   */
+  async drawPoint(x1, y1, z1) {
+    await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Point(x1, y1, z1));
+    return this;
+  }
+
+  /**
+   * @param {number} x1 - x
+   * @param {number} y1 - y
+   * @param {number} height - Text height
+   * @param {number} rotation - Text rotation
+   * @param {string} value - the string itself
+   * @param {string} [horizontalAlignment="left"] left | center | right
+   * @param {string} [verticalAlignment="baseline"] baseline | bottom | middle | top
+   * @returns {Promise<StreamableDrawing>}
+   */
+  async drawText(
+    x1,
+    y1,
+    height,
+    rotation,
+    value,
+    horizontalAlignment = "left",
+    verticalAlignment = "baseline"
+  ) {
+    await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Text(
+      x1,
+      y1,
+      height,
+      rotation,
+      value,
+      horizontalAlignment,
+      verticalAlignment
+    )
+    );
+    return this;
+  }
+
+  /**
+ * @param {[number, number][]} points - Array of points like [ [x1, y1], [x2, y2]... ]
+ * @param {boolean} closed - Closed polyline flag
+ * @param {number} startWidth - Default start width
+ * @param {number} endWidth - Default end width
+ * @returns {Promise<StreamableDrawing>}
+ */
+  async drawPolyline(points, closed = false, startWidth = 0, endWidth = 0) {
+    await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Polyline(points, closed, startWidth, endWidth));
+    return this;
+  }
+
+
+
+  /**
    * @param {[number, number, number][]} points - Array of points like [ [x1, y1, z1], [x2, y2, z1]... ]
+   * @returns {Promise<StreamableDrawing>}
    */
   async drawPolyline3d(points) {
     points.forEach((point) => {
@@ -100,13 +340,96 @@ class StreamableDrawing {
         throw "Require 3D coordinates";
       }
     });
-    await this._activeLayer.writeShape(this.modelSpace, this._tempShapes.tagsManager, new Polyline3d(points));
+    await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Polyline3d(points));
+    return this;
+  }
+
+  /**
+   * @param {[number, number, number][]} vertices - Array of vertices like [ [x1, y1, z3], [x2, y2, z3]... ]
+   * @param {number[][]} faceIndices - Array of face indices
+   * @returns {Promise<StreamableDrawing>}
+   */
+  async drawMesh(vertices, faceIndices) {
+    await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Mesh(vertices, faceIndices));
+    return this;
+  }
+
+  /**
+ * Draw a spline.
+ * @param {[Array]} controlPoints - Array of control points like [ [x1, y1], [x2, y2]... ]
+ * @param {number} degree - Degree of spline: 2 for quadratic, 3 for cubic. Default is 3
+ * @param {[number]} knots - Knot vector array. If null, will use a uniform knot vector. Default is null
+ * @param {[number]} weights - Control point weights. If provided, must be one weight for each control point. Default is null
+ * @param {[Array]} fitPoints - Array of fit points like [ [x1, y1], [x2, y2]... ]
+ * @returns {Promise<StreamableDrawing>}
+ */
+  async drawSpline(
+    controlPoints,
+    degree = 3,
+    knots = null,
+    weights = null,
+    fitPoints = []
+  ) {
+    await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Spline(controlPoints, degree, knots, weights, fitPoints));
+    return this;
+  }
+
+  /**
+ * Draw an ellipse.
+ * @param {number} x1 - Center x
+ * @param {number} y1 - Center y
+ * @param {number} majorAxisX - Endpoint x of major axis, relative to center
+ * @param {number} majorAxisY - Endpoint y of major axis, relative to center
+ * @param {number} axisRatio - Ratio of minor axis to major axis
+ * @param {number} startAngle - Start angle
+ * @param {number} endAngle - End angle
+ * @returns {Promise<StreamableDrawing>}
+ */
+  async drawEllipse(
+    x1,
+    y1,
+    majorAxisX,
+    majorAxisY,
+    axisRatio,
+    startAngle = 0,
+    endAngle = 2 * Math.PI
+  ) {
+    await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Ellipse(
+      x1,
+      y1,
+      majorAxisX,
+      majorAxisY,
+      axisRatio,
+      startAngle,
+      endAngle
+    ));
+    return this;
+  }
+
+  /**
+ * @param {number} x1 - x
+ * @param {number} y1 - y
+ * @param {number} z1 - z
+ * @param {number} x2 - x
+ * @param {number} y2 - y
+ * @param {number} z2 - z
+ * @param {number} x3 - x
+ * @param {number} y3 - y
+ * @param {number} z3 - z
+ * @param {number} x4 - x
+ * @param {number} y4 - y
+ * @param {number} z4 - z
+ * @returns {Promise<StreamableDrawing>}
+ */
+  async drawFace(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4) {
+    await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Face(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4));
     return this;
   }
 
   /**
    *
    * @param {number} trueColor - Integer representing the true color, can be passed as an hexadecimal value of the form 0xRRGGBB
+   * @returns {StreamableDrawing}
    */
   setTrueColor(trueColor) {
     this._activeLayer.setTrueColor(trueColor);
@@ -119,6 +442,7 @@ class StreamableDrawing {
    *
    * @param {string} variable
    * @param {array} values Array of "two elements arrays". [  [value1_GroupCode, value1_value], [value2_GroupCode, value2_value]  ]
+   * @returns {StreamableDrawing}
    */
   header(variable, values) {
     this._headers[variable] = values;
@@ -185,7 +509,7 @@ class StreamableDrawing {
 
     appIdTable.add(new AppId("ACAD"));
 
-    this.modelSpace = this.addBlock("*Model_Space");
+    this._modelSpace = this.addBlock("*Model_Space");
     this.addBlock("*Paper_Space");
 
     const d = new Dictionary();
@@ -279,7 +603,6 @@ class StreamableDrawing {
     // Objects section end.
 
     await tagsManager.push(0, "EOF");
-    await tagsManager.writeToStream();
     await tagsManager.writeToStream();
 
     stream.end();

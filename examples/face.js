@@ -12,7 +12,18 @@ function draw(d) {
     0, 0, 0)
 }
 
-module.exports = { draw };
+async function asyncDraw(d) {
+  d.addLayer('face_example', Drawing.ACI.GREEN, 'CONTINUOUS');
+  d.setActiveLayer('face_example');
+
+  await d.drawFace(
+    0, 0, 0,
+    0, 1, 1,
+    1, 1, 0,
+    0, 0, 0)
+}
+
+module.exports = { asyncDraw, draw };
 
 if (require.main === module) {
   let d = new Drawing();

@@ -9,7 +9,15 @@ function draw(d) {
   d.drawCylinder(0, 0, 0, 20, 300, 1, 0, 0);
 }
 
-module.exports = { draw };
+async function asyncDraw(d) {
+  d.setUnits('Decimeters');
+  d.addLineType('DASHDOT', '_ . _ ', [0.5, -0.5, 0.0, -0.5]);
+  d.addLayer('l_green', Drawing.ACI.GREEN, 'DASHDOT');
+  d.setActiveLayer('l_green');
+  await d.drawCylinder(0, 0, 0, 20, 300, 1, 0, 0);
+}
+
+module.exports = { asyncDraw, draw };
 
 if (require.main === module) {
   let d = new Drawing();
