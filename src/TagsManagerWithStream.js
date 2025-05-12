@@ -1,3 +1,5 @@
+const { once } = require('node:stream');
+
 const DEFAULT_WRITE_CHUNK_SIZE = 2000;
 const STREAM_NOT_WRITABLE_ERROR = "Stream is not writable. Reinstantiate the TagsManagerWithStream with a writable stream.";
 
@@ -69,16 +71,7 @@ class TagsManagerWithStream {
   async _writeChunkToStream(lines) {
     const data = lines.join("\n") + "\n";
     const mustDrain = !this._stream.write(data);
-
-    if (mustDrain) {
-      await new Promise((resolve) => {
-        const drain = () => {
-          this._stream.off("drain", drain);
-          resolve();
-        };
-        this._stream.on("drain", drain);
-      });
-    }
+    if (mustDrain) await once(this._stream, 'drain');
   }
 }
 
