@@ -6,6 +6,7 @@ const Drawing = require("../src/Drawing");
 const LineType = require("../src/LineType");
 const Layer = require("../src/Layer");
 const Handle = require("../src/Handle");
+const { get } = require("http");
 
 describe("Drawing", function () {
   let outputDir;
@@ -20,6 +21,18 @@ describe("Drawing", function () {
 
   beforeEach(() => {
     Handle.reset();
+  });
+
+  getExampleFileFixtures().forEach((filename) => {
+    it(`can draw ${filename}`, function () {
+      const { exampleFilepath } = setup(filename);
+      const d = new Drawing();
+      const { draw } = require(exampleFilepath.replace(".dxf", ""));
+
+      draw(d);
+
+      expect(d.toDxfString()).toEqual(getFile(exampleFilepath));
+    });
   });
 
   it("can be just blank", function () {
@@ -109,4 +122,9 @@ function setup(filename) {
   const fixtureFilepath = path.join(__dirname, 'fixtures', filename);
   const exampleFilepath = path.join(__dirname, '..', 'examples', filename);
   return { fixtureFilepath, exampleFilepath };
+}
+
+function getExampleFileFixtures() {
+  return fs.readdirSync(path.join(__dirname, '..', 'examples'))
+    .filter((file) => file.endsWith('.js.dxf') && !file.includes('#'));
 }

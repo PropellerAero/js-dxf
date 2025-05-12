@@ -1,11 +1,18 @@
 const Drawing = require('./../src/Drawing');
 const fs = require('fs');
 
-let d = new Drawing();
+function draw(d) {
+  d.addLayer('l_green', Drawing.ACI.RED, 'DOTTED');
+  d.setActiveLayer('l_green');
+  d.drawArc(50, 50, 50, 30, 90);
+}
 
-d.addLayer('l_green', Drawing.ACI.RED, 'DOTTED');
-d.setActiveLayer('l_green');
+module.exports = { draw };
 
-d.drawArc(50, 50, 50, 30, 90);
+if (require.main === module) {
+  let d = new Drawing();
 
-fs.writeFileSync(__filename + '.dxf', d.toDxfString());
+  draw(d);
+
+  fs.writeFileSync(__filename + '.dxf', d.toDxfString());
+}

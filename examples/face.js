@@ -1,15 +1,23 @@
 const Drawing = require('./../src/Drawing');
 const fs = require('fs');
 
-let d = new Drawing();
+function draw(d) {
+  d.addLayer('face_example', Drawing.ACI.GREEN, 'CONTINUOUS');
+  d.setActiveLayer('face_example');
 
-d.addLayer('face_example', Drawing.ACI.GREEN, 'CONTINUOUS');
-d.setActiveLayer('face_example');
+  d.drawFace(
+    0, 0, 0,
+    0, 1, 1,
+    1, 1, 0,
+    0, 0, 0)
+}
 
-d.drawFace(
-    0,0,0,
-    0,1,1,
-    1,1,0,
-    0,0,0)
+module.exports = { draw };
 
-fs.writeFileSync(__filename + '.dxf', d.toDxfString());
+if (require.main === module) {
+  let d = new Drawing();
+
+  draw(d);
+
+  fs.writeFileSync(__filename + '.dxf', d.toDxfString());
+}

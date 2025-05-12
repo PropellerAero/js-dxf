@@ -1,13 +1,21 @@
 const Drawing = require('./../src/Drawing');
 const fs = require('fs');
 
-let d = new Drawing();
+function draw(d) {
+  d.addLayer('l_green', Drawing.ACI.GREEN, 'CONTINUOUS');
+  d.setActiveLayer('l_green');
 
-d.addLayer('l_green', Drawing.ACI.GREEN, 'CONTINUOUS');
-d.setActiveLayer('l_green');
+  d.drawText(0, 0, 10, 0, 'js - DXF');
+  d.drawText(0, 15, 10, 0, 'js - DXF', 'center', 'middle');
+  d.drawText(0, 20, 10, 0, 'js - DXF', 'right');
+}
 
-d.drawText(0, 0, 10, 0, 'js - DXF');
-d.drawText(0, 15, 10, 0, 'js - DXF', 'center', 'middle');
-d.drawText(0, 20, 10, 0, 'js - DXF', 'right');
+module.exports = { draw };
 
-fs.writeFileSync(__filename + '.dxf', d.toDxfString());
+if (require.main === module) {
+  let d = new Drawing();
+
+  draw(d);
+
+  fs.writeFileSync(__filename + '.dxf', d.toDxfString());
+}

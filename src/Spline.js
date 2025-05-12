@@ -102,7 +102,7 @@ class Spline extends DatabaseObject {
         manager.push(43, 1e-7);
         manager.push(44, 1e-10);
 
-        for (const knot of knots) {
+        for (const knot of this.knots) {
             manager.push(40, knot);
         }
 
@@ -141,7 +141,7 @@ class Spline extends DatabaseObject {
         await manager.push(43, 1e-7);
         await manager.push(44, 1e-10);
 
-        for (const knot of knots) {
+        for (const knot of this.knots) {
             await manager.push(40, knot);
         }
 
