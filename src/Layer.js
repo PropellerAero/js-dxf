@@ -90,8 +90,8 @@ class Layer extends DatabaseObject {
      * @returns {Promise<void>}
      */
     async writeShape(space, manager, shape) {
-      shape.ownerObjectHandle = space.handle;
       shape.layer = this;
+      shape.ownerObjectHandle = space.handle;
       await shape.asyncTags(manager);
   }
 }

@@ -1,15 +1,18 @@
 const Drawing = require('./../src/Drawing');
 const fs = require('fs');
+const polylines = require('./polyline3d.json');
 
 /**
  * @param {Drawing} d
  * @returns {void}
  */
 function draw(d) {
-  d.addLineType('CONTINUOUS', '______', [])
-  d.addLayer('l_red', Drawing.ACI.RED, 'CONTINUOUS');
-  d.setActiveLayer('l_red');
-  d.drawPolyline3d([ [0, 0, 20], [10, 10, 5], [20, 10, 5], [30, 30, 40] ]);
+  d.addLayer('contours', Drawing.ACI.YELLOW);
+  d.setActiveLayer('contours');
+
+  for (const polyline of polylines) {
+    d.drawPolyline3d(polyline);
+  }
 }
 
 /**
@@ -17,10 +20,12 @@ function draw(d) {
  * @returns {Promise<void>}
  */
 async function asyncDraw(d) {
-  d.addLineType('CONTINUOUS', '______', [])
-  d.addLayer('l_red', Drawing.ACI.RED, 'CONTINUOUS');
-  d.setActiveLayer('l_red');
-  await d.drawPolyline3d([ [0, 0, 20], [10, 10, 5], [20, 10, 5], [30, 30, 40] ]);
+  d.addLayer('contours', Drawing.ACI.YELLOW);
+  d.setActiveLayer('contours');
+
+  for (const polyline of polylines) {
+    await d.drawPolyline3d(polyline);
+  }
 }
 
 module.exports = { asyncDraw, draw };

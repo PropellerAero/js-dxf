@@ -31,7 +31,6 @@ describe("StreamableDrawing", function () {
 
       await d.end();
 
-
       expect(getFile(outputFilepath)).toEqual(getFile(exampleFilepath));
     });
   });
