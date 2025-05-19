@@ -1,7 +1,9 @@
-const Drawing = require('./src/Drawing');
-const StreamableDrawing = require('./src/StreamableDrawing');
+const BrowserFriendlyDrawing = require('./src/BrowserFriendlyDrawing');
+const NodeJsDrawing = require('./src/NodeJsDrawing');
+const StringWritableStream = require('./src/StringWritableStream');
 
 module.exports = {
-  Drawing,
-  StreamableDrawing,
+  BrowserFriendlyDrawing,
+  NodeJsDrawing,
+  StringWritableStream,
 };

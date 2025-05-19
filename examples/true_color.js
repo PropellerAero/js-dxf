@@ -1,37 +1,12 @@
-const Drawing = require('./../src/Drawing');
-const fs = require('fs');
+const NodeJsDrawing = require('../src/NodeJsDrawing');
+const BrowserFriendlyDrawing = require('../src/BrowserFriendlyDrawing');
+const mainModule = require('./mainModule');
 
 /**
- * @param {Drawing} d
- * @returns {void}
- */
-function draw(d) {
-  d.addLayer('l_firebrick', 0, 'CONTINUOUS');
-  d.setActiveLayer('l_firebrick');
-  d.setTrueColor(0xB22222);
-  d.drawCircle(-10, 10, 5);
-
-  d.addLayer('l_gold', 0, 'CONTINUOUS');
-  d.setActiveLayer('l_gold');
-  d.setTrueColor(0xFFD700);
-  d.drawCircle(10, 10, 5);
-
-  d.addLayer('l_mediumseagreen', 0, 'CONTINUOUS');
-  d.setActiveLayer('l_mediumseagreen');
-  d.setTrueColor(0x3CB371);
-  d.drawCircle(-10, -10, 5);
-
-  d.addLayer('l_midnightblue', 0, 'CONTINUOUS');
-  d.setActiveLayer('l_midnightblue');
-  d.setTrueColor(0x191970);
-  d.drawCircle(10, -10, 5);
-}
-
-/**
- * @param {StreamableDrawing} d
+ * @param {BrowserFriendlyDrawing | NodeJsDrawing} d
  * @returns {Promise<void>}
  */
-async function asyncDraw(d) {
+async function draw(d) {
   d.addLayer('l_firebrick', 0, 'CONTINUOUS');
   d.setActiveLayer('l_firebrick');
   d.setTrueColor(0xB22222);
@@ -53,12 +28,8 @@ async function asyncDraw(d) {
   await d.drawCircle(10, -10, 5);
 }
 
-module.exports = { asyncDraw, draw };
+module.exports = { draw };
 
 if (require.main === module) {
-  let d = new Drawing();
-
-  draw(d);
-
-  fs.writeFileSync(__filename + '.dxf', d.toDxfString());
+  mainModule(draw);
 }

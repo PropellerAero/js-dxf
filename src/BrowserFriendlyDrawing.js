@@ -1,8 +1,4 @@
-const os = require('os');
-const fs = require('fs');
-const path = require('path');
-const { once } = require('node:stream');
-
+const { once } = require('./once');
 const AppId = require("./AppId");
 const Arc = require("./Arc");
 const Block = require("./Block");
@@ -11,7 +7,6 @@ const Circle = require("./Circle");
 const Cylinder = require("./Cylinder");
 const Dictionary = require("./Dictionary");
 const DimStyleTable = require("./DimStyleTable");
-const Drawing = require('./Drawing');
 const Ellipse = require("./Ellipse");
 const Face = require("./Face");
 const Handle = require('./Handle');
@@ -25,14 +20,15 @@ const Polyline = require('./Polyline');
 const Polyline3d = require("./Polyline3d");
 const Spline = require("./Spline");
 const Table = require("./Table");
-const TagsManagerWithStream = require("./TagsManagerWithStream");
+const TagsManager = require("./TagsManager");
 const Text = require('./Text');
 const TextStyle = require("./TextStyle");
 const Viewport = require("./Viewport");
 const Vertex = require('./Vertex');
+const { StringWritableStream } = require('./StringWritableStream');
 
-class StreamableDrawing {
-  constructor(filepath) {
+class BrowserFriendlyDrawing {
+  constructor(stream) {
     this._layers = {};
     this._activeLayer = null;
     this._lineTypes = {};
@@ -40,22 +36,26 @@ class StreamableDrawing {
     this._tables = {};
     this._blocks = {};
     this._dictionary = new Dictionary();
-    this._filepath = filepath;
-    this._tempDir = this._makeTempDir();
-    this._tempShapes = this._createTemporaryTagsManager("temporary_shapes.dxf");
+    this._finalStream = stream;
 
     this.setUnits("Unitless");
 
-    for (const ltype of Drawing.LINE_TYPES) {
+    for (const ltype of BrowserFriendlyDrawing.LINE_TYPES) {
       this.addLineType(ltype.name, ltype.description, ltype.elements);
     }
 
-    for (const l of Drawing.LAYERS) {
+    for (const l of BrowserFriendlyDrawing.LAYERS) {
       this.addLayer(l.name, l.colorNumber, l.lineTypeName);
     }
 
     this.setActiveLayer("0");
     this._generateAutocadExtras();
+
+    this._init();
+  }
+
+  _init() {
+    this._tempShapes = this._createTemporaryTagsManager();
   }
 
   /**
@@ -421,11 +421,21 @@ class StreamableDrawing {
   }
 
   async end() {
-    const headerStream = await this._writeHeader();
-    const bodyStream = await this._writeBody();
-    const footerStream = await this._writeFooter();
+    const { tagsManager: headerTagsManager, stream: headerStream } = this._createTemporaryTagsManager();
+    await this._writeHeader(headerTagsManager);
+    headerStream.end();
+    await once(headerStream, "finish");
 
-    await this._pipeline([headerStream, bodyStream, footerStream], fs.createWriteStream(this._filepath));
+    await this._tempShapes.tagsManager.finaliseWriting();
+    this._tempShapes.stream.end();
+    await once(this._tempShapes.stream, "finish");
+
+    const { tagsManager: footerTagsManager, stream: footerStream } = this._createTemporaryTagsManager();
+    await this._writeFooter(footerTagsManager);
+    footerStream.end();
+    await once(footerStream, "finish");
+
+    await this._pipeline([headerStream, this._tempShapes.stream, footerStream], this._finalStream);
   }
 
   /**
@@ -516,16 +526,14 @@ class StreamableDrawing {
    */
   setUnits(unit) {
     let units =
-      typeof StreamableDrawing.UNITS[unit] != "undefined"
-        ? StreamableDrawing.UNITS[unit]
-        : StreamableDrawing.UNITS["Unitless"];
+      typeof BrowserFriendlyDrawing.UNITS[unit] != "undefined"
+        ? BrowserFriendlyDrawing.UNITS[unit]
+        : BrowserFriendlyDrawing.UNITS["Unitless"];
     this.header("INSUNITS", [[70, units]]);
     return this;
   }
 
-  async _writeHeader() {
-    const { tagsManager, filepath, stream } = this._createTemporaryTagsManager("header.dxf");
-
+  async _writeHeader(tagsManager) {
     // Setup
     const blockRecordTable = new Table("BLOCK_RECORD");
     const blocks = Object.values(this._blocks);
@@ -554,84 +562,59 @@ class StreamableDrawing {
 
     // Tables section start.
     await tagsManager.start("TABLES");
-    await ltypeTable.asyncTags(tagsManager);
-    await layerTable.asyncTags(tagsManager);
+    await ltypeTable.tags(tagsManager);
+    await layerTable.tags(tagsManager);
     const tables = Object.values(this._tables);
     for (const t of tables) {
-      await t.asyncTags(tagsManager);
+      await t.tags(tagsManager);
     }
-    await blockRecordTable.asyncTags(tagsManager);
+    await blockRecordTable.tags(tagsManager);
     await tagsManager.end();
     // Tables section end.
 
     // Blocks section start.
     await tagsManager.start("BLOCKS");
     for (const b of blocks) {
-      await b.asyncTags(tagsManager);
+      await b.tags(tagsManager);
     }
     await tagsManager.end();
     // Blocks section end.
 
     // Entities section start.
     await tagsManager.start("ENTITIES");
-    await tagsManager.writeToStream();
-    stream.end();
-    await once(stream, "finish");
-
-    return fs.createReadStream(filepath);
+    await tagsManager.finaliseWriting();
   }
 
-  async _writeBody() {
-    await this._tempShapes.tagsManager.writeToStream();
-    this._tempShapes.stream.end();
-    await once(this._tempShapes.stream, "finish");
-
-    return fs.createReadStream(this._tempShapes.filepath);
-  }
-
-  async _writeFooter() {
-    const { tagsManager, filepath, stream } = this._createTemporaryTagsManager("footer.dxf");
+  async _writeFooter(tagsManager) {
 
     await tagsManager.end();
     // Entities section end.
 
     // Objects section start.
     await tagsManager.start("OBJECTS");
-    await this._dictionary.asyncTags(tagsManager);
+    await this._dictionary.tags(tagsManager);
     await tagsManager.end();
     // Objects section end.
 
     await tagsManager.push(0, "EOF");
-    await tagsManager.writeToStream();
-
-    stream.end();
-    await once(stream, "finish");
-
-    return fs.createReadStream(filepath);
+    await tagsManager.finaliseWriting();
   }
 
-  _createTemporaryTagsManager(filename) {
-    const filepath = path.join(this._tempDir, filename);
-    const stream = fs.createWriteStream(filepath);
+  _createTemporaryTagsManager() {
+    const stream = new StringWritableStream();
     return {
-      tagsManager: new TagsManagerWithStream(stream),
-      filepath,
+      tagsManager: new TagsManager(stream),
       stream,
     }
   }
 
-  async _pipeline(readables, writable) {
-    for (const readable of readables) {
-      await new Promise((resolve, reject) => {
-        readable.pipe(writable, { end: false });
-        readable.on('end', resolve);
-        readable.on('error', reject);
-        writable.on('error', reject);
+  async _pipeline(closedStreams, writable) {
+    for (const closedStream of closedStreams) {
+      await new Promise((resolve) => {
+        writable.write(closedStream.toString());
+        resolve();
       });
     }
-
-    writable.end();
-    await once(writable, 'finish');
   }
 
   _ltypeTable() {
@@ -647,25 +630,54 @@ class StreamableDrawing {
     for (const l of layers) t.add(l);
     return t;
   }
-
-  _generateRandomString(length) {
-    let result = '';
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (let i = 0; i < length; i++) {
-      result += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return result;
-  }
-
-  _makeTempDir() {
-    const tempDir = path.join(os.tmpdir(), this._generateRandomString(10));
-    fs.mkdirSync(tempDir);
-    return tempDir;
-  }
 }
 
-StreamableDrawing.ACI = Drawing.ACI;
-StreamableDrawing.LINE_TYPES = Drawing.LINE_TYPES;
-StreamableDrawing.LAYERS = Drawing.LAYERS;
-StreamableDrawing.UNITS = Drawing.UNITS;
-module.exports = StreamableDrawing;
+//AutoCAD Color Index (ACI)
+//http://sub-atomic.com/~moses/acadcolors.html
+BrowserFriendlyDrawing.ACI = {
+  LAYER: 0,
+  RED: 1,
+  YELLOW: 2,
+  GREEN: 3,
+  CYAN: 4,
+  BLUE: 5,
+  MAGENTA: 6,
+  WHITE: 7,
+};
+
+BrowserFriendlyDrawing.LINE_TYPES = [
+  { name: "CONTINUOUS", description: "______", elements: [] },
+  { name: "DASHED", description: "_ _ _ ", elements: [5.0, -5.0] },
+  { name: "DOTTED", description: ". . . ", elements: [0.0, -5.0] },
+];
+
+BrowserFriendlyDrawing.LAYERS = [
+  { name: "0", colorNumber: BrowserFriendlyDrawing.ACI.WHITE, lineTypeName: "CONTINUOUS" },
+];
+
+//https://www.autodesk.com/techpubs/autocad/acad2000/dxf/header_section_group_codes_dxf_02.htm
+BrowserFriendlyDrawing.UNITS = {
+  Unitless: 0,
+  Inches: 1,
+  Feet: 2,
+  Miles: 3,
+  Millimeters: 4,
+  Centimeters: 5,
+  Meters: 6,
+  Kilometers: 7,
+  Microinches: 8,
+  Mils: 9,
+  Yards: 10,
+  Angstroms: 11,
+  Nanometers: 12,
+  Microns: 13,
+  Decimeters: 14,
+  Decameters: 15,
+  Hectometers: 16,
+  Gigameters: 17,
+  "Astronomical units": 18,
+  "Light years": 19,
+  Parsecs: 20,
+};
+
+module.exports = BrowserFriendlyDrawing;

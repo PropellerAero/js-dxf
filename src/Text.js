@@ -1,6 +1,5 @@
 const DatabaseObject = require("./DatabaseObject");
 const TagsManager = require("./TagsManager");
-const TagsManagerWithStream = require("./TagsManagerWithStream");
 
 const H_ALIGN_CODES = ["left", "center", "right"];
 const V_ALIGN_CODES = ["baseline", "bottom", "middle", "top"];
@@ -36,44 +35,12 @@ class Text extends DatabaseObject {
 
     /**
      * @param {TagsManager} manager
-     */
-    tags(manager) {
-        //https://www.autodesk.com/techpubs/autocad/acadr14/dxf/text_al_u05_c.htm
-        manager.push(0, "TEXT");
-        super.tags(manager);
-        manager.push(8, this.layer.name);
-        manager.point(this.x, this.y);
-        manager.push(40, this.height);
-        manager.push(1, this.value);
-        manager.push(50, this.rotation);
-
-        if (
-            H_ALIGN_CODES.includes(this.hAlign, 1) ||
-            V_ALIGN_CODES.includes(this.vAlign, 1)
-        ) {
-            manager.push(72, Math.max(H_ALIGN_CODES.indexOf(this.hAlign), 0));
-
-            manager.push(11, this.x);
-            manager.push(21, this.y);
-            manager.push(31, 0);
-
-            /* AutoCAD needs this one more time, yes, exactly here. */
-            manager.push(100, "AcDbText");
-            manager.push(73, Math.max(V_ALIGN_CODES.indexOf(this.vAlign), 0));
-        } else {
-            /* AutoCAD needs this one more time. */
-            manager.push(100, "AcDbText");
-        }
-    }
-
-    /**
-     * @param {TagsManagerWithStream} manager
      * @returns {Promise<void>}
      */
-    async asyncTags(manager) {
+    async tags(manager) {
         //https://www.autodesk.com/techpubs/autocad/acadr14/dxf/text_al_u05_c.htm
         await manager.push(0, "TEXT");
-        await super.asyncTags(manager);
+        await super.tags(manager);
         await manager.push(8, this.layer.name);
         await manager.point(this.x, this.y);
         await manager.push(40, this.height);
