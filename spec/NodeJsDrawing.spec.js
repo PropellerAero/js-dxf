@@ -7,7 +7,7 @@ const Handle = require("../src/Handle");
 const { getFile, getExampleFileFixtures } = require("./support/helpers");
 const { once } = require("../src/once");
 
-describe("StreamableDrawing", function () {
+describe("NodeJsDrawing", function () {
   let outputDir;
 
   beforeAll(() => {

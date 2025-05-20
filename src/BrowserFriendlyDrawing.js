@@ -99,7 +99,7 @@ class BrowserFriendlyDrawing {
    * @param {number} r - radius
    * @param {number} startAngle - degree
    * @param {number} endAngle - degree
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawArc(x1, y1, r, startAngle, endAngle) {
     await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Arc(x1, y1, r, startAngle, endAngle));
@@ -110,7 +110,7 @@ class BrowserFriendlyDrawing {
    * @param {number} x1 - Center x
    * @param {number} y1 - Center y
    * @param {number} r - radius
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawCircle(x1, y1, r) {
     await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Circle(x1, y1, r));
@@ -126,7 +126,7 @@ class BrowserFriendlyDrawing {
    * @param {number} extrusionDirectionX - Extrusion Direction x
    * @param {number} extrusionDirectionY - Extrusion Direction y
    * @param {number} extrusionDirectionZ - Extrusion Direction z
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawCylinder(
     x1,
@@ -161,7 +161,7 @@ class BrowserFriendlyDrawing {
    * @param {number} axisRatio - Ratio of minor axis to major axis
    * @param {number | undefined} startAngle - Start angle
    * @param {number | undefined} endAngle - End angle
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawEllipse(
     x1,
@@ -197,7 +197,7 @@ class BrowserFriendlyDrawing {
    * @param {number} x4 - x
    * @param {number} y4 - y
    * @param {number} z4 - z
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawFace(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4) {
     await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Face(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4));
@@ -209,7 +209,7 @@ class BrowserFriendlyDrawing {
    * @param {number} y1
    * @param {number} x2
    * @param {number} y2
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawLine(x1, y1, x2, y2) {
     await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Line(x1, y1, x2, y2));
@@ -223,7 +223,7 @@ class BrowserFriendlyDrawing {
    * @param {number} x2
    * @param {number} y2
    * @param {number} z2
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawLine3d(x1, y1, z1, x2, y2, z2) {
     await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Line3d(x1, y1, z1, x2, y2, z2));
@@ -233,7 +233,7 @@ class BrowserFriendlyDrawing {
   /**
    * @param {[number, number, number][]} vertices - Array of vertices like [ [x1, y1, z3], [x2, y2, z3]... ]
    * @param {number[][]} faceIndices - Array of face indices
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawMesh(vertices, faceIndices) {
     await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Mesh(vertices, faceIndices));
@@ -243,7 +243,7 @@ class BrowserFriendlyDrawing {
   /**
    * @param {number} x
    * @param {number} y
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawPoint(x, y) {
     await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Point(x, y));
@@ -263,7 +263,7 @@ class BrowserFriendlyDrawing {
    * @param {boolean} circumscribed - If `true` is a polygon in which each side is a tangent to a circle.
    * If `false` is a polygon in which all vertices lie on a circle. By default `false`.
    *
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawPolygon(
     x,
@@ -293,7 +293,7 @@ class BrowserFriendlyDrawing {
    * @param {boolean} closed - Closed polyline flag
    * @param {number} startWidth - Default start width
    * @param {number} endWidth - Default end width
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawPolyline(points, closed = false, startWidth = 0, endWidth = 0) {
     await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Polyline(points, closed, startWidth, endWidth));
@@ -302,7 +302,7 @@ class BrowserFriendlyDrawing {
 
   /**
    * @param {[number, number, number][]} points - Array of points like [ [x1, y1, z1], [x2, y2, z1]... ]
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawPolyline3d(points) {
     points.forEach((point) => {
@@ -321,7 +321,7 @@ class BrowserFriendlyDrawing {
    * @param {number} y2
    * @param {number} cornerLength
    * @param {number} cornerBulge
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawRect(x1, y1, x2, y2, cornerLength, cornerBulge) {
     const w = x2 - x1;
@@ -364,7 +364,7 @@ class BrowserFriendlyDrawing {
    * @param {[number] | undefined} knots - Knot vector array. If null, will use a uniform knot vector. Default is null
    * @param {[number] | undefined} weights - Control point weights. If provided, must be one weight for each control point. Default is null
    * @param {[Array] | undefined} fitPoints - Array of fit points like [ [x1, y1], [x2, y2]... ]
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawSpline(
     controlPoints,
@@ -385,7 +385,7 @@ class BrowserFriendlyDrawing {
    * @param {string} value - the string itself
    * @param {string} [horizontalAlignment="left"] left | center | right
    * @param {string} [verticalAlignment="baseline"] baseline | bottom | middle | top
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawText(
     x1,
@@ -413,7 +413,7 @@ class BrowserFriendlyDrawing {
    * @param {number} x1 - x
    * @param {number} y1 - y
    * @param {number} z1 - z
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawVertex(x1, y1, z1) {
     await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Vertex(x1, y1, z1));
@@ -499,7 +499,7 @@ class BrowserFriendlyDrawing {
    *
    * @param {string} variable
    * @param {array} values Array of "two elements arrays". [  [value1_GroupCode, value1_value], [value2_GroupCode, value2_value]  ]
-   * @returns {StreamableDrawing}
+   * @returns {this}
    */
   header(variable, values) {
     this._headers[variable] = values;
@@ -514,7 +514,7 @@ class BrowserFriendlyDrawing {
   /**
    *
    * @param {number} trueColor - Integer representing the true color, can be passed as an hexadecimal value of the form 0xRRGGBB
-   * @returns {StreamableDrawing}
+   * @returns {this}
    */
   setTrueColor(trueColor) {
     this._activeLayer.setTrueColor(trueColor);
@@ -522,7 +522,7 @@ class BrowserFriendlyDrawing {
   }
 
   /**
-   * @param {string} unit see StreamableDrawing.UNITS
+   * @param {string} unit see this.UNITS
    */
   setUnits(unit) {
     let units =
