@@ -1,5 +1,5 @@
 declare module "@propelleraero/dxf-writer" {
-    export type Unit =
+    type Unit =
         | "Unitless"
         | "Inches"
         | "Feet"
@@ -22,29 +22,29 @@ declare module "@propelleraero/dxf-writer" {
         | "Light years"
         | "Parsecs";
 
-    export type HorizontalAlignment = "left" | "center" | "right";
-    export type VerticalAlignment = "baseline" | "bottom" | "middle" | "top";
+    type HorizontalAlignment = "left" | "center" | "right";
+    type VerticalAlignment = "baseline" | "bottom" | "middle" | "top";
 
-    export type Point2D = [number, number];
-    export type Point3D = [number, number, number];
+    type Point2D = [number, number];
+    type Point3D = [number, number, number];
 
     // [GroupCode, value]
-    export type HeaderValue = [number, number];
+    type HeaderValue = [number, number];
 
-    export abstract class Taggable {
+    abstract class Taggable {
         tags(manager: TagsManager): Promise<void>;
     }
 
-    export abstract class Block extends Taggable {
+    abstract class Block extends Taggable {
         constructor(name: string);
     }
 
-    export abstract class Table extends Taggable {
+    abstract class Table extends Taggable {
         constructor(name: string);
         add(element: object): void;
     }
 
-    export abstract class TagsManager {
+    abstract class TagsManager {
         point(x: number, y: number, z?: number): Promise<void>;
         start(name: string): Promise<void>;
         end(): Promise<void>;
@@ -56,7 +56,7 @@ declare module "@propelleraero/dxf-writer" {
         finaliseWriting(): Promise<void>;
     }
 
-    export class Arc extends Taggable {
+    class Arc extends Taggable {
         public x1: number;
         public y1: number;
         public r: number;
@@ -79,7 +79,7 @@ declare module "@propelleraero/dxf-writer" {
         );
     }
 
-    export class Circle extends Taggable {
+    class Circle extends Taggable {
         public x1: number;
         public y1: number;
         public r: number;
@@ -92,7 +92,7 @@ declare module "@propelleraero/dxf-writer" {
         constructor(x1: number, y1: number, r: number);
     }
 
-    export class Cylinder extends Taggable {
+    class Cylinder extends Taggable {
         public x1: number;
         public y1: number;
         public z1: number;
@@ -124,7 +124,7 @@ declare module "@propelleraero/dxf-writer" {
         );
     }
 
-    export class Face extends Taggable {
+    class Face extends Taggable {
         public x1: number;
         public y1: number;
         public z1: number;
@@ -154,7 +154,7 @@ declare module "@propelleraero/dxf-writer" {
         );
     }
 
-    export class Layer extends Taggable {
+    class Layer extends Taggable {
         public name: string;
         public colorNumber: number;
         public lineTypeName: string;
@@ -167,7 +167,7 @@ declare module "@propelleraero/dxf-writer" {
         writeShapes(space: Block, manager: TagsManager, shape: Taggable): void;
     }
 
-    export class Line extends Taggable {
+    class Line extends Taggable {
         public x1: number;
         public y1: number;
         public x2: number;
@@ -176,7 +176,7 @@ declare module "@propelleraero/dxf-writer" {
         constructor(x1: number, y1: number, x2: number, y2: number);
     }
 
-    export class LineType extends Taggable {
+    class LineType extends Taggable {
         public name: string;
         public description: string;
         public elements: Array<number>;
@@ -189,26 +189,26 @@ declare module "@propelleraero/dxf-writer" {
         getElementsSum(): number;
     }
 
-    export class Point extends Taggable {
+    class Point extends Taggable {
         public x: number;
         public y: number;
 
         constructor(x: number, y: number);
     }
 
-    export class Polyline extends Taggable {
+    class Polyline extends Taggable {
         public points: Array<Point2D>;
 
         constructor(points: Array<Point2D>);
     }
 
-    export class Polyline3D extends Taggable {
+    class Polyline3D extends Taggable {
         public points: Array<Point3D>;
 
         constructor(points: Array<Point3D>);
     }
 
-    export class Text extends Taggable {
+    class Text extends Taggable {
         public x1: number;
         public y1: number;
         public height: number;
@@ -236,14 +236,14 @@ declare module "@propelleraero/dxf-writer" {
         );
     }
 
-    export class Mesh extends Taggable {
+    class Mesh extends Taggable {
         public vertices: Point3D[];
         public faceIndices: number[][];
 
         constructor(vertices: number[][], faceIndices: number[][]);
     }
 
-    export type ACIKey =
+    type ACIKey =
         | "LAYER"
         | "RED"
         | "YELLOW"
@@ -275,19 +275,19 @@ declare module "@propelleraero/dxf-writer" {
             name: string,
             colorNumber: number,
             lineTypeName: string
-        ): StreamableDrawing;
+        ): this;
 
         /**
          * @param {string} name
          * @param {string} description
          * @param {array} elements - if elem > 0 it is a line, if elem < 0 it is gap, if elem == 0.0 it is a
-         * @returns {StreamableDrawing}
+         * @returns {this}
          */
         addLineType(
             name: string,
             description: string,
             elements: Array<number>
-        ): StreamableDrawing;
+        ): this;
 
         addTable(name: string): Table;
 
@@ -297,7 +297,7 @@ declare module "@propelleraero/dxf-writer" {
          * @param {number} r - radius
          * @param {number} startAngle - degree
          * @param {number} endAngle - degree
-         * @returns {Promise<StreamableDrawing>}
+         * @returns {Promise<this>}
          */
         drawArc(
             x1: number,
@@ -305,19 +305,19 @@ declare module "@propelleraero/dxf-writer" {
             r: number,
             startAngle: number,
             endAngle: number
-        ): Promise<StreamableDrawing>;
+        ): Promise<this>;
 
         /**
          * @param {number} x1 - Center x
          * @param {number} y1 - Center y
          * @param {number} r - radius
-         * @returns {Promise<StreamableDrawing>}
+         * @returns {Promise<this>}
          */
         drawCircle(
             x1: number,
             y1: number,
             r: number
-        ): Promise<StreamableDrawing>;
+        ): Promise<this>;
 
         /**
          * @param {number} x1 - Center x
@@ -328,7 +328,7 @@ declare module "@propelleraero/dxf-writer" {
          * @param {number} extrusionDirectionX - Extrusion Direction x
          * @param {number} extrusionDirectionY - Extrusion Direction y
          * @param {number} extrusionDirectionZ - Extrusion Direction z
-         * @returns {Promise<StreamableDrawing>}
+         * @returns {Promise<this>}
          */
         drawCylinder(
             x1: number,
@@ -339,7 +339,7 @@ declare module "@propelleraero/dxf-writer" {
             extrusionDirectionX: number,
             extrusionDirectionY: number,
             extrusionDirectionZ: number
-        ): Promise<StreamableDrawing>;
+        ): Promise<this>;
 
         /**
          * Draw an ellipse.
@@ -350,7 +350,7 @@ declare module "@propelleraero/dxf-writer" {
          * @param {number} axisRatio - Ratio of minor axis to major axis
          * @param {number | undefined} startAngle - Start angle
          * @param {number | undefined} endAngle - End angle
-         * @returns {Promise<StreamableDrawing>}
+         * @returns {Promise<this>}
          */
         drawEllipse(
             x1: number,
@@ -360,7 +360,7 @@ declare module "@propelleraero/dxf-writer" {
             axisRatio: number,
             startAngle?: number,
             endAngle?: number
-        ): Promise<StreamableDrawing>;
+        ): Promise<this>;
 
         drawFace(
             x1: number,
@@ -375,14 +375,14 @@ declare module "@propelleraero/dxf-writer" {
             x4: number,
             y4: number,
             z4: number
-        ): Promise<StreamableDrawing>;
+        ): Promise<this>;
 
         drawLine(
             x1: number,
             y1: number,
             x2: number,
             y2: number
-        ): Promise<StreamableDrawing>;
+        ): Promise<this>;
 
         /**
          * @param {number} x1
@@ -391,7 +391,7 @@ declare module "@propelleraero/dxf-writer" {
          * @param {number} x2
          * @param {number} y2
          * @param {number} z2
-         * @returns {Promise<StreamableDrawing>}
+         * @returns {Promise<this>}
          */
         drawLine3d(
             x1: number,
@@ -400,19 +400,19 @@ declare module "@propelleraero/dxf-writer" {
             x2: number,
             y2: number,
             z2: number
-        ): Promise<StreamableDrawing>;
+        ): Promise<this>;
 
         /**
          * @param {[number, number, number][]} vertices - Array of vertices like [ [x1, y1, z3], [x2, y2, z3]... ]
          * @param {number[][]} faceIndices - Array of face indices
-         * @returns {Promise<StreamableDrawing>}
+         * @returns {Promise<this>}
          */
         drawMesh(
             vertices: Point3D[],
             faceIndices: number[][]
-        ): Promise<StreamableDrawing>;
+        ): Promise<this>;
 
-        drawPoint(x: number, y: number): Promise<StreamableDrawing>;
+        drawPoint(x: number, y: number): Promise<this>;
 
         /**
          * Draw a regular convex polygon as a polyline entity.
@@ -427,7 +427,7 @@ declare module "@propelleraero/dxf-writer" {
          * @param {boolean} circumscribed - If `true` is a polygon in which each side is a tangent to a circle.
          * If `false` is a polygon in which all vertices lie on a circle. By default `false`.
          *
-         * @returns {Promise<StreamableDrawing>}
+         * @returns {Promise<this>}
          */
         drawPolygon(
             x: number,
@@ -436,27 +436,27 @@ declare module "@propelleraero/dxf-writer" {
             radius: number,
             rotation?: number,
             circumscribed?: boolean
-        ): Promise<StreamableDrawing>;
+        ): Promise<this>;
 
         /**
          * @param {array} points - Array of points like [ [x1, y1], [x2, y2]... ]
          * @param {boolean} closed - Closed polyline flag
          * @param {number} startWidth - Default start width
          * @param {number} endWidth - Default end width
-         * @returns {Promise<StreamableDrawing>}
+         * @returns {Promise<this>}
          */
         drawPolyline(
             points: Array<Point2D>,
             closed?: boolean,
             startWidth?: number,
             endWidth?: number
-        ): Promise<StreamableDrawing>;
+        ): Promise<this>;
 
         /**
          * @param {array} points - Array of points like [ [x1, y1, z1], [x2, y2, z1]... ]
-         * @returns {Promise<StreamableDrawing>}
+         * @returns {Promise<this>}
          */
-        drawPolyline3d(points: Array<Point3D>): Promise<StreamableDrawing>;
+        drawPolyline3d(points: Array<Point3D>): Promise<this>;
 
         /**
          * draws a closed rectangular polyline with option for round or diagonal corners
@@ -466,7 +466,7 @@ declare module "@propelleraero/dxf-writer" {
          * @param {number} y2
          * @param {number} cornerLength given P (the 90deg corner point), and P1 (the point where arc begins), where cornerLength is the length of P to P1
          * @param {number} cornerBulge defaults to 0, for diagonal corners
-         * @returns {Promise<StreamableDrawing>}
+         * @returns {Promise<this>}
          */
         drawRect(
             x1: number,
@@ -475,7 +475,7 @@ declare module "@propelleraero/dxf-writer" {
             y2: number,
             cornerLength?: number,
             cornerBulge?: number
-        ): Promise<StreamableDrawing>;
+        ): Promise<this>;
 
         /**
          * Draw a spline.
@@ -484,7 +484,7 @@ declare module "@propelleraero/dxf-writer" {
          * @param {[number] | undefined} knots - Knot vector array. If null, will use a uniform knot vector. Default is null
          * @param {[number] | undefined} weights - Control point weights. If provided, must be one weight for each control point. Default is null
          * @param {[Array] | undefined} fitPoints - Array of fit points like [ [x1, y1], [x2, y2]... ]
-         * @returns {Promise<StreamableDrawing>}
+         * @returns {Promise<this>}
          */
         drawSpline(
             controlPoints: Array<Point2D>,
@@ -492,7 +492,7 @@ declare module "@propelleraero/dxf-writer" {
             knots?: number[],
             weights?: number[],
             fitPoints?: Array<Point2D>
-        ): Promise<StreamableDrawing>;
+        ): Promise<this>;
 
         /**
          * @param {number} x1 - x
@@ -502,7 +502,7 @@ declare module "@propelleraero/dxf-writer" {
          * @param {string} value - the string itself
          * @param {HorizontalAlignment} [horizontalAlignment="left"] left | center | right
          * @param {VerticalAlignment} [verticalAlignment="baseline"] baseline | bottom | middle | top
-         * @returns {Promise<StreamableDrawing>}
+         * @returns {Promise<this>}
          */
         drawText(
             x1: number,
@@ -512,19 +512,19 @@ declare module "@propelleraero/dxf-writer" {
             value: string,
             horizontalAlignment?: HorizontalAlignment,
             verticalAlignment?: VerticalAlignment
-        ): Promise<StreamableDrawing>;
+        ): Promise<this>;
 
         /**
          * @param {number} x1 - x
          * @param {number} y1 - y
          * @param {number} z1 - z
-         * @returns {Promise<StreamableDrawing>}
+         * @returns {Promise<this>}
          */
         drawVertex(
             x1: number,
             y1: number,
             z1: number
-        ): Promise<StreamableDrawing>;
+        ): Promise<this>;
 
         end(): Promise<void>;
 
@@ -534,25 +534,25 @@ declare module "@propelleraero/dxf-writer" {
          *
          * @param {string} variable
          * @param {array} values Array of "two elements arrays". [  [value1_GroupCode, value1_value], [value2_GroupCode, value2_value]  ]
-         * @returns {StreamableDrawing}
+         * @returns {this}
          *
          */
-        header(variable: string, values: Array<HeaderValue>): StreamableDrawing;
+        header(variable: string, values: Array<HeaderValue>): this;
 
-        setActiveLayer(name: string): StreamableDrawing;
+        setActiveLayer(name: string): this;
 
         /**
          * @param {number} trueColor - Integer representing the true color, can be passed as an hexadecimal value of the form 0xRRGGBB
-         * @returns {StreamableDrawing}
+         * @returns {this}
          */
-        setTrueColor(trueColor: number): StreamableDrawing;
+        setTrueColor(trueColor: number): this;
 
         /**
          *
          * @param {string} unit see Drawing.UNITS
-         * @returns {StreamableDrawing}
+         * @returns {this}
          */
-        setUnits(unit: Unit): StreamableDrawing;
+        setUnits(unit: Unit): this;
 
         /**
          * AutoCAD Color Index (ACI)
@@ -570,7 +570,7 @@ declare module "@propelleraero/dxf-writer" {
         static UNITS: { [key in Unit]: number };
     }
 
-    export class StreamableDrawing extends BrowserFriendlyDrawing {
+    export class NodeJsDrawing extends BrowserFriendlyDrawing {
         constructor(stream: NodeJS.WritableStream);
     }
 }
