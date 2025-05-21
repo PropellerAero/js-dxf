@@ -2,11 +2,12 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 
-const StreamableDrawing = require("../src/StreamableDrawing");
+const Drawing = require("../src/NodeJsDrawing");
 const Handle = require("../src/Handle");
 const { getFile, getExampleFileFixtures } = require("./support/helpers");
+const { once } = require("../src/once");
 
-describe("StreamableDrawing", function () {
+describe("NodeJsDrawing", function () {
   let outputDir;
 
   beforeAll(() => {
@@ -24,12 +25,17 @@ describe("StreamableDrawing", function () {
   getExampleFileFixtures().forEach((filename) => {
     it(`can draw ${filename}`, async function () {
       const { outputFilepath, exampleFilepath } = setup(outputDir, filename);
-      const d = new StreamableDrawing(outputFilepath);
-      const { asyncDraw } = require(exampleFilepath.replace(".dxf", ""));
+      const stream = fs.createWriteStream(outputFilepath);
+      const d = new Drawing(stream);
+      const { draw } = require(exampleFilepath.replace(".dxf", ""));
 
-      await asyncDraw(d);
+      await draw(d);
 
       await d.end();
+
+      stream.end();
+
+      await once(stream, "finish");
 
       expect(getFile(outputFilepath)).toEqual(getFile(exampleFilepath));
     });
@@ -37,7 +43,8 @@ describe("StreamableDrawing", function () {
 
   it("can draw a mesh to stream", async function () {
     const { outputFilepath, fixtureFilepath } = setup(outputDir, "mesh-simple-stream.dxf");
-    var d = new StreamableDrawing(outputFilepath);
+    const stream = fs.createWriteStream(outputFilepath);
+    var d = new Drawing(stream);
 
     await d.drawMesh(
       [
@@ -53,6 +60,10 @@ describe("StreamableDrawing", function () {
     );
 
     await d.end();
+
+    stream.end();
+
+    await once(stream, "finish");
 
     expect(getFile(outputFilepath)).toEqual(getFile(fixtureFilepath));
   });

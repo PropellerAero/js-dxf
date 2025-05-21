@@ -1,10 +1,10 @@
 'use strict';
 
 const fs = require("fs");
-const TagsManagerWithStream = require("../src/TagsManagerWithStream");
+const TagsManager = require("../src/TagsManager");
 
-describe("TagsManagerWithStream", () => {
-  const filePath = "output/tagsManagerWithStream.dxf";
+describe("TagsManager", () => {
+  const filePath = "output/TagsManager.dxf";
   let stream;
 
   beforeAll(() => {
@@ -39,7 +39,7 @@ describe("TagsManagerWithStream", () => {
   it("pushes tags to the stream once they exceed the writeChunk size", async () => {
     spyOn(stream, "write").and.callThrough();
 
-    const tagsManager = new TagsManagerWithStream(stream, 4);
+    const tagsManager = new TagsManager(stream, 4);
 
     await tagsManager.push(0, 0); // each push is 2 lines
     await tagsManager.push(1, 1);
@@ -59,10 +59,10 @@ describe("TagsManagerWithStream", () => {
     expect(stream.write).toHaveBeenCalledTimes(2);
   });
 
-  it("finishes writing to the stream when writeToStream is called", async () => {
+  it("finishes writing to the stream when finaliseWriting is called", async () => {
     spyOn(stream, "write").and.callThrough();
 
-    const tagsManager = new TagsManagerWithStream(stream, 4);
+    const tagsManager = new TagsManager(stream, 4);
 
     await tagsManager.push(0, 0);
     await tagsManager.push(1, 1);
@@ -74,26 +74,26 @@ describe("TagsManagerWithStream", () => {
 
     expect(stream.write).not.toHaveBeenCalledTimes(2);
 
-    await tagsManager.writeToStream();
+    await tagsManager.finaliseWriting();
 
     expect(stream.write).toHaveBeenCalledTimes(2);
   });
 
   it("throws an error if the stream is not writable", async () => {
-    const tagsManager = new TagsManagerWithStream(stream, 4);
+    const tagsManager = new TagsManager(stream, 4);
 
     stream.end();
 
     try {
-      await tagsManager.writeToStream();
-      fail("Expected writeToStream to throw an error");
+      await tagsManager.finaliseWriting();
+      fail("Expected finaliseWriting to throw an error");
     } catch (err) {
-      expect(err.message).toBe("Stream is not writable. Reinstantiate the TagsManagerWithStream with a writable stream.");
+      expect(err.message).toBe("Stream is not writable. Reinstantiate the TagsManager with a writable stream.");
     }
   });
 
   it("throws an error if the stream is not writable when pushing", async () => {
-    const tagsManager = new TagsManagerWithStream(stream, 4);
+    const tagsManager = new TagsManager(stream, 4);
 
     stream.end();
 
@@ -101,7 +101,7 @@ describe("TagsManagerWithStream", () => {
       await tagsManager.push(0, 0);
       fail("Expected push to throw an error");
     } catch (err) {
-      expect(err.message).toBe("Stream is not writable. Reinstantiate the TagsManagerWithStream with a writable stream.");
+      expect(err.message).toBe("Stream is not writable. Reinstantiate the TagsManager with a writable stream.");
     }
   });
 });

@@ -1,6 +1,5 @@
 const DatabaseObject = require("./DatabaseObject");
 const TagsManager = require("./TagsManager");
-const TagsManagerWithStream = require("./TagsManagerWithStream");
 
 class Arc extends DatabaseObject {
     /**
@@ -21,27 +20,12 @@ class Arc extends DatabaseObject {
 
     /**
      * @param {TagsManager} manager
-     */
-    tags(manager) {
-        //https://www.autodesk.com/techpubs/autocad/acadr14/dxf/line_al_u05_c.htm
-        manager.push(0, "ARC");
-        super.tags(manager);
-        manager.push(8, this.layer.name);
-        manager.point(this.x, this.y);
-        manager.push(40, this.r);
-        manager.push(100, "AcDbArc");
-        manager.push(50, this.startAngle);
-        manager.push(51, this.endAngle);
-    }
-
-    /**
-     * @param {TagsManagerWithStream} manager
      * @returns {Promise<void>}
      */
-    async asyncTags(manager) {
+    async tags(manager) {
         //https://www.autodesk.com/techpubs/autocad/acadr14/dxf/line_al_u05_c.htm
         await manager.push(0, "ARC");
-        await super.asyncTags(manager);
+        await super.tags(manager);
         await manager.push(8, this.layer.name);
         await manager.point(this.x, this.y);
         await manager.push(40, this.r);

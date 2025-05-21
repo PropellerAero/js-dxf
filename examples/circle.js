@@ -1,36 +1,21 @@
-const Drawing = require('./../src/Drawing');
-const fs = require('fs');
+const NodeJsDrawing = require('../src/NodeJsDrawing');
+const BrowserFriendlyDrawing = require('../src/BrowserFriendlyDrawing');
+const mainModule = require('./mainModule');
 
 /**
- * @param {Drawing} d
- * @returns {void}
- */
-function draw(d) {
-  d.setUnits('Decimeters');
-  d.addLineType('DASHDOT', '_ . _ ', [0.5, -0.5, 0.0, -0.5]);
-  d.addLayer('l_green', Drawing.ACI.GREEN, 'DASHDOT');
-  d.setActiveLayer('l_green');
-  d.drawCircle(0, 0, 20);
-}
-
-/**
- * @param {StreamableDrawing} d
+ * @param {BrowserFriendlyDrawing | NodeJsDrawing} d
  * @returns {Promise<void>}
  */
-async function asyncDraw(d) {
+async function draw(d) {
   d.setUnits('Decimeters');
   d.addLineType('DASHDOT', '_ . _ ', [0.5, -0.5, 0.0, -0.5]);
-  d.addLayer('l_green', Drawing.ACI.GREEN, 'DASHDOT');
+  d.addLayer('l_green', NodeJsDrawing.ACI.GREEN, 'DASHDOT');
   d.setActiveLayer('l_green');
   await d.drawCircle(0, 0, 20);
 }
 
-module.exports = { asyncDraw, draw };
+module.exports = { draw };
 
 if (require.main === module) {
-  let d = new Drawing();
-
-  draw(d);
-
-  fs.writeFileSync(__filename + '.dxf', d.toDxfString());
+  mainModule(draw);
 }

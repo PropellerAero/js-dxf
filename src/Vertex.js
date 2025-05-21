@@ -1,6 +1,5 @@
 const DatabaseObject = require("./DatabaseObject");
 const TagsManager = require("./TagsManager");
-const TagsManagerWithStream = require("./TagsManagerWithStream");
 
 class Vertex extends DatabaseObject {
     /**
@@ -18,22 +17,11 @@ class Vertex extends DatabaseObject {
 
     /**
      * @param {TagsManager} manager
-     */
-    tags(manager) {
-        manager.push(0, "VERTEX");
-        super.tags(manager);
-        manager.push(8, this.layer.name);
-        manager.point(this.x, this.y, this.z);
-        manager.push(70, 32);
-    }
-
-    /**
-     * @param {TagsManagerWithStream} manager
      * @returns {Promise<void>}
      */
-    async asyncTags(manager) {
+    async tags(manager) {
         await manager.push(0, "VERTEX");
-        await super.asyncTags(manager);
+        await super.tags(manager);
         await manager.push(8, this.layer.name);
         await manager.point(this.x, this.y, this.z);
         await manager.push(70, 32);

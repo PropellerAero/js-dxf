@@ -1,6 +1,5 @@
 const DatabaseObject = require("./DatabaseObject");
 const TagsManager = require("./TagsManager");
-const TagsManagerWithStream = require("./TagsManagerWithStream");
 
 class Polyline extends DatabaseObject {
     /**
@@ -19,36 +18,11 @@ class Polyline extends DatabaseObject {
 
     /**
      * @param {TagsManager} manager
-     */
-    tags(manager) {
-        manager.push(0, "LWPOLYLINE");
-        super.tags(manager);
-        manager.push(8, this.layer.name);
-        manager.push(6, "ByLayer");
-        manager.push(62, 256);
-        manager.push(370, -1);
-        manager.push(90, this.points.length);
-        manager.push(70, this.closed ? 1 : 0);
-
-        for (const point of this.points) {
-            const [x, y, z] = point;
-            manager.push(10, x);
-            manager.push(20, y);
-            if (this.startWidth !== 0 || this.endWidth !== 0) {
-                manager.push(40, this.startWidth);
-                manager.push(41, this.endWidth);
-            }
-            if (z !== undefined) manager.push(42, z);
-        }
-    }
-
-    /**
-     * @param {TagsManagerWithStream} manager
      * @returns {Promise<void>}
      */
-    async asyncTags(manager) {
+    async tags(manager) {
         await manager.push(0, "LWPOLYLINE");
-        await super.asyncTags(manager);
+        await super.tags(manager);
         await manager.push(8, this.layer.name);
         await manager.push(6, "ByLayer");
         await manager.push(62, 256);

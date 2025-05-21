@@ -1,8 +1,4 @@
-const os = require('os');
-const fs = require('fs');
-const path = require('path');
-const { once } = require('node:stream');
-
+const { once } = require('./once');
 const AppId = require("./AppId");
 const Arc = require("./Arc");
 const Block = require("./Block");
@@ -11,7 +7,6 @@ const Circle = require("./Circle");
 const Cylinder = require("./Cylinder");
 const Dictionary = require("./Dictionary");
 const DimStyleTable = require("./DimStyleTable");
-const Drawing = require('./Drawing');
 const Ellipse = require("./Ellipse");
 const Face = require("./Face");
 const Handle = require('./Handle');
@@ -25,14 +20,15 @@ const Polyline = require('./Polyline');
 const Polyline3d = require("./Polyline3d");
 const Spline = require("./Spline");
 const Table = require("./Table");
-const TagsManagerWithStream = require("./TagsManagerWithStream");
+const TagsManager = require("./TagsManager");
 const Text = require('./Text');
 const TextStyle = require("./TextStyle");
 const Viewport = require("./Viewport");
 const Vertex = require('./Vertex');
+const { StringWritableStream } = require('./StringWritableStream');
 
-class StreamableDrawing {
-  constructor(filepath) {
+class BrowserFriendlyDrawing {
+  constructor(stream) {
     this._layers = {};
     this._activeLayer = null;
     this._lineTypes = {};
@@ -40,22 +36,26 @@ class StreamableDrawing {
     this._tables = {};
     this._blocks = {};
     this._dictionary = new Dictionary();
-    this._filepath = filepath;
-    this._tempDir = this._makeTempDir();
-    this._tempShapes = this._createTemporaryTagsManager("temporary_shapes.dxf");
+    this._finalStream = stream;
 
     this.setUnits("Unitless");
 
-    for (const ltype of Drawing.LINE_TYPES) {
+    for (const ltype of BrowserFriendlyDrawing.LINE_TYPES) {
       this.addLineType(ltype.name, ltype.description, ltype.elements);
     }
 
-    for (const l of Drawing.LAYERS) {
+    for (const l of BrowserFriendlyDrawing.LAYERS) {
       this.addLayer(l.name, l.colorNumber, l.lineTypeName);
     }
 
     this.setActiveLayer("0");
     this._generateAutocadExtras();
+
+    this._init();
+  }
+
+  _init() {
+    this._tempShapes = this._createTemporaryTagsManager();
   }
 
   /**
@@ -99,7 +99,7 @@ class StreamableDrawing {
    * @param {number} r - radius
    * @param {number} startAngle - degree
    * @param {number} endAngle - degree
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawArc(x1, y1, r, startAngle, endAngle) {
     await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Arc(x1, y1, r, startAngle, endAngle));
@@ -110,7 +110,7 @@ class StreamableDrawing {
    * @param {number} x1 - Center x
    * @param {number} y1 - Center y
    * @param {number} r - radius
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawCircle(x1, y1, r) {
     await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Circle(x1, y1, r));
@@ -126,7 +126,7 @@ class StreamableDrawing {
    * @param {number} extrusionDirectionX - Extrusion Direction x
    * @param {number} extrusionDirectionY - Extrusion Direction y
    * @param {number} extrusionDirectionZ - Extrusion Direction z
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawCylinder(
     x1,
@@ -161,7 +161,7 @@ class StreamableDrawing {
    * @param {number} axisRatio - Ratio of minor axis to major axis
    * @param {number | undefined} startAngle - Start angle
    * @param {number | undefined} endAngle - End angle
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawEllipse(
     x1,
@@ -197,7 +197,7 @@ class StreamableDrawing {
    * @param {number} x4 - x
    * @param {number} y4 - y
    * @param {number} z4 - z
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawFace(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4) {
     await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Face(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4));
@@ -209,7 +209,7 @@ class StreamableDrawing {
    * @param {number} y1
    * @param {number} x2
    * @param {number} y2
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawLine(x1, y1, x2, y2) {
     await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Line(x1, y1, x2, y2));
@@ -223,7 +223,7 @@ class StreamableDrawing {
    * @param {number} x2
    * @param {number} y2
    * @param {number} z2
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawLine3d(x1, y1, z1, x2, y2, z2) {
     await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Line3d(x1, y1, z1, x2, y2, z2));
@@ -233,7 +233,7 @@ class StreamableDrawing {
   /**
    * @param {[number, number, number][]} vertices - Array of vertices like [ [x1, y1, z3], [x2, y2, z3]... ]
    * @param {number[][]} faceIndices - Array of face indices
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawMesh(vertices, faceIndices) {
     await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Mesh(vertices, faceIndices));
@@ -243,7 +243,7 @@ class StreamableDrawing {
   /**
    * @param {number} x
    * @param {number} y
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawPoint(x, y) {
     await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Point(x, y));
@@ -263,7 +263,7 @@ class StreamableDrawing {
    * @param {boolean} circumscribed - If `true` is a polygon in which each side is a tangent to a circle.
    * If `false` is a polygon in which all vertices lie on a circle. By default `false`.
    *
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawPolygon(
     x,
@@ -293,7 +293,7 @@ class StreamableDrawing {
    * @param {boolean} closed - Closed polyline flag
    * @param {number} startWidth - Default start width
    * @param {number} endWidth - Default end width
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawPolyline(points, closed = false, startWidth = 0, endWidth = 0) {
     await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Polyline(points, closed, startWidth, endWidth));
@@ -302,7 +302,7 @@ class StreamableDrawing {
 
   /**
    * @param {[number, number, number][]} points - Array of points like [ [x1, y1, z1], [x2, y2, z1]... ]
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawPolyline3d(points) {
     points.forEach((point) => {
@@ -321,7 +321,7 @@ class StreamableDrawing {
    * @param {number} y2
    * @param {number} cornerLength
    * @param {number} cornerBulge
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawRect(x1, y1, x2, y2, cornerLength, cornerBulge) {
     const w = x2 - x1;
@@ -364,7 +364,7 @@ class StreamableDrawing {
    * @param {[number] | undefined} knots - Knot vector array. If null, will use a uniform knot vector. Default is null
    * @param {[number] | undefined} weights - Control point weights. If provided, must be one weight for each control point. Default is null
    * @param {[Array] | undefined} fitPoints - Array of fit points like [ [x1, y1], [x2, y2]... ]
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawSpline(
     controlPoints,
@@ -385,7 +385,7 @@ class StreamableDrawing {
    * @param {string} value - the string itself
    * @param {string} [horizontalAlignment="left"] left | center | right
    * @param {string} [verticalAlignment="baseline"] baseline | bottom | middle | top
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawText(
     x1,
@@ -413,7 +413,7 @@ class StreamableDrawing {
    * @param {number} x1 - x
    * @param {number} y1 - y
    * @param {number} z1 - z
-   * @returns {Promise<StreamableDrawing>}
+   * @returns {Promise<this>}
    */
   async drawVertex(x1, y1, z1) {
     await this._activeLayer.writeShape(this._modelSpace, this._tempShapes.tagsManager, new Vertex(x1, y1, z1));
@@ -421,11 +421,21 @@ class StreamableDrawing {
   }
 
   async end() {
-    const headerStream = await this._writeHeader();
-    const bodyStream = await this._writeBody();
-    const footerStream = await this._writeFooter();
+    const { tagsManager: headerTagsManager, stream: headerStream } = this._createTemporaryTagsManager();
+    await this._writeHeader(headerTagsManager);
+    headerStream.end();
+    await once(headerStream, "finish");
 
-    await this._pipeline([headerStream, bodyStream, footerStream], fs.createWriteStream(this._filepath));
+    await this._tempShapes.tagsManager.finaliseWriting();
+    this._tempShapes.stream.end();
+    await once(this._tempShapes.stream, "finish");
+
+    const { tagsManager: footerTagsManager, stream: footerStream } = this._createTemporaryTagsManager();
+    await this._writeFooter(footerTagsManager);
+    footerStream.end();
+    await once(footerStream, "finish");
+
+    await this._pipeline([headerStream, this._tempShapes.stream, footerStream], this._finalStream);
   }
 
   /**
@@ -489,7 +499,7 @@ class StreamableDrawing {
    *
    * @param {string} variable
    * @param {array} values Array of "two elements arrays". [  [value1_GroupCode, value1_value], [value2_GroupCode, value2_value]  ]
-   * @returns {StreamableDrawing}
+   * @returns {this}
    */
   header(variable, values) {
     this._headers[variable] = values;
@@ -504,7 +514,7 @@ class StreamableDrawing {
   /**
    *
    * @param {number} trueColor - Integer representing the true color, can be passed as an hexadecimal value of the form 0xRRGGBB
-   * @returns {StreamableDrawing}
+   * @returns {this}
    */
   setTrueColor(trueColor) {
     this._activeLayer.setTrueColor(trueColor);
@@ -512,20 +522,18 @@ class StreamableDrawing {
   }
 
   /**
-   * @param {string} unit see StreamableDrawing.UNITS
+   * @param {string} unit see this.UNITS
    */
   setUnits(unit) {
     let units =
-      typeof StreamableDrawing.UNITS[unit] != "undefined"
-        ? StreamableDrawing.UNITS[unit]
-        : StreamableDrawing.UNITS["Unitless"];
+      typeof BrowserFriendlyDrawing.UNITS[unit] != "undefined"
+        ? BrowserFriendlyDrawing.UNITS[unit]
+        : BrowserFriendlyDrawing.UNITS["Unitless"];
     this.header("INSUNITS", [[70, units]]);
     return this;
   }
 
-  async _writeHeader() {
-    const { tagsManager, filepath, stream } = this._createTemporaryTagsManager("header.dxf");
-
+  async _writeHeader(tagsManager) {
     // Setup
     const blockRecordTable = new Table("BLOCK_RECORD");
     const blocks = Object.values(this._blocks);
@@ -554,84 +562,59 @@ class StreamableDrawing {
 
     // Tables section start.
     await tagsManager.start("TABLES");
-    await ltypeTable.asyncTags(tagsManager);
-    await layerTable.asyncTags(tagsManager);
+    await ltypeTable.tags(tagsManager);
+    await layerTable.tags(tagsManager);
     const tables = Object.values(this._tables);
     for (const t of tables) {
-      await t.asyncTags(tagsManager);
+      await t.tags(tagsManager);
     }
-    await blockRecordTable.asyncTags(tagsManager);
+    await blockRecordTable.tags(tagsManager);
     await tagsManager.end();
     // Tables section end.
 
     // Blocks section start.
     await tagsManager.start("BLOCKS");
     for (const b of blocks) {
-      await b.asyncTags(tagsManager);
+      await b.tags(tagsManager);
     }
     await tagsManager.end();
     // Blocks section end.
 
     // Entities section start.
     await tagsManager.start("ENTITIES");
-    await tagsManager.writeToStream();
-    stream.end();
-    await once(stream, "finish");
-
-    return fs.createReadStream(filepath);
+    await tagsManager.finaliseWriting();
   }
 
-  async _writeBody() {
-    await this._tempShapes.tagsManager.writeToStream();
-    this._tempShapes.stream.end();
-    await once(this._tempShapes.stream, "finish");
-
-    return fs.createReadStream(this._tempShapes.filepath);
-  }
-
-  async _writeFooter() {
-    const { tagsManager, filepath, stream } = this._createTemporaryTagsManager("footer.dxf");
+  async _writeFooter(tagsManager) {
 
     await tagsManager.end();
     // Entities section end.
 
     // Objects section start.
     await tagsManager.start("OBJECTS");
-    await this._dictionary.asyncTags(tagsManager);
+    await this._dictionary.tags(tagsManager);
     await tagsManager.end();
     // Objects section end.
 
     await tagsManager.push(0, "EOF");
-    await tagsManager.writeToStream();
-
-    stream.end();
-    await once(stream, "finish");
-
-    return fs.createReadStream(filepath);
+    await tagsManager.finaliseWriting();
   }
 
-  _createTemporaryTagsManager(filename) {
-    const filepath = path.join(this._tempDir, filename);
-    const stream = fs.createWriteStream(filepath);
+  _createTemporaryTagsManager() {
+    const stream = new StringWritableStream();
     return {
-      tagsManager: new TagsManagerWithStream(stream),
-      filepath,
+      tagsManager: new TagsManager(stream),
       stream,
     }
   }
 
-  async _pipeline(readables, writable) {
-    for (const readable of readables) {
-      await new Promise((resolve, reject) => {
-        readable.pipe(writable, { end: false });
-        readable.on('end', resolve);
-        readable.on('error', reject);
-        writable.on('error', reject);
+  async _pipeline(closedStreams, writable) {
+    for (const closedStream of closedStreams) {
+      await new Promise((resolve) => {
+        writable.write(closedStream.toString());
+        resolve();
       });
     }
-
-    writable.end();
-    await once(writable, 'finish');
   }
 
   _ltypeTable() {
@@ -647,25 +630,54 @@ class StreamableDrawing {
     for (const l of layers) t.add(l);
     return t;
   }
-
-  _generateRandomString(length) {
-    let result = '';
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (let i = 0; i < length; i++) {
-      result += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return result;
-  }
-
-  _makeTempDir() {
-    const tempDir = path.join(os.tmpdir(), this._generateRandomString(10));
-    fs.mkdirSync(tempDir);
-    return tempDir;
-  }
 }
 
-StreamableDrawing.ACI = Drawing.ACI;
-StreamableDrawing.LINE_TYPES = Drawing.LINE_TYPES;
-StreamableDrawing.LAYERS = Drawing.LAYERS;
-StreamableDrawing.UNITS = Drawing.UNITS;
-module.exports = StreamableDrawing;
+//AutoCAD Color Index (ACI)
+//http://sub-atomic.com/~moses/acadcolors.html
+BrowserFriendlyDrawing.ACI = {
+  LAYER: 0,
+  RED: 1,
+  YELLOW: 2,
+  GREEN: 3,
+  CYAN: 4,
+  BLUE: 5,
+  MAGENTA: 6,
+  WHITE: 7,
+};
+
+BrowserFriendlyDrawing.LINE_TYPES = [
+  { name: "CONTINUOUS", description: "______", elements: [] },
+  { name: "DASHED", description: "_ _ _ ", elements: [5.0, -5.0] },
+  { name: "DOTTED", description: ". . . ", elements: [0.0, -5.0] },
+];
+
+BrowserFriendlyDrawing.LAYERS = [
+  { name: "0", colorNumber: BrowserFriendlyDrawing.ACI.WHITE, lineTypeName: "CONTINUOUS" },
+];
+
+//https://www.autodesk.com/techpubs/autocad/acad2000/dxf/header_section_group_codes_dxf_02.htm
+BrowserFriendlyDrawing.UNITS = {
+  Unitless: 0,
+  Inches: 1,
+  Feet: 2,
+  Miles: 3,
+  Millimeters: 4,
+  Centimeters: 5,
+  Meters: 6,
+  Kilometers: 7,
+  Microinches: 8,
+  Mils: 9,
+  Yards: 10,
+  Angstroms: 11,
+  Nanometers: 12,
+  Microns: 13,
+  Decimeters: 14,
+  Decameters: 15,
+  Hectometers: 16,
+  Gigameters: 17,
+  "Astronomical units": 18,
+  "Light years": 19,
+  Parsecs: 20,
+};
+
+module.exports = BrowserFriendlyDrawing;

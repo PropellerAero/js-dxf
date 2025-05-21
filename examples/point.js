@@ -1,26 +1,13 @@
-const Drawing = require('./../src/Drawing');
-const fs = require('fs');
+const NodeJsDrawing = require('../src/NodeJsDrawing');
+const BrowserFriendlyDrawing = require('../src/BrowserFriendlyDrawing');
+const mainModule = require('./mainModule');
 
 /**
- * @param {Drawing} d
- * @returns {void}
- */
-function draw(d) {
-  d.addLayer('l_green', Drawing.ACI.GREEN, 'CONTINUOUS');
-  d.setActiveLayer('l_green');
-
-  d.drawPoint(50, 50)
-   .drawPoint(60,60)
-   .drawPoint(70,70)
-   .drawPoint(80,80)
-}
-
-/**
- * @param {StreamableDrawing} d
+ * @param {BrowserFriendlyDrawing | NodeJsDrawing} d
  * @returns {Promise<void>}
  */
-async function asyncDraw(d) {
-  d.addLayer('l_green', Drawing.ACI.GREEN, 'CONTINUOUS');
+async function draw(d) {
+  d.addLayer('l_green', NodeJsDrawing.ACI.GREEN, 'CONTINUOUS');
   d.setActiveLayer('l_green');
 
    await d.drawPoint(50, 50);
@@ -29,12 +16,8 @@ async function asyncDraw(d) {
    await d.drawPoint(80,80);
 }
 
-module.exports = { asyncDraw, draw };
+module.exports = { draw };
 
 if (require.main === module) {
-  let d = new Drawing();
-
-  draw(d);
-
-  fs.writeFileSync(__filename + '.dxf', d.toDxfString());
+  mainModule(draw);
 }
