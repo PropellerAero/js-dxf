@@ -1,4 +1,5 @@
 const DatabaseObject = require("./DatabaseObject");
+const TagsManager = require("./TagsManager");
 
 class Viewport extends DatabaseObject {
     constructor(name, height) {
@@ -7,6 +8,10 @@ class Viewport extends DatabaseObject {
         this.height = height;
     }
 
+    /**
+     * @param {TagsManager} manager
+     * @returns {Promise<void>}
+     */
     async tags(manager) {
         await manager.push(0, "VPORT");
         await super.tags(manager);

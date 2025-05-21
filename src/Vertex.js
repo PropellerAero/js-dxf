@@ -1,4 +1,5 @@
 const DatabaseObject = require("./DatabaseObject");
+const TagsManager = require("./TagsManager");
 
 class Vertex extends DatabaseObject {
     /**
@@ -14,6 +15,10 @@ class Vertex extends DatabaseObject {
         this.z = z;
     }
 
+    /**
+     * @param {TagsManager} manager
+     * @returns {Promise<void>}
+     */
     async tags(manager) {
         await manager.push(0, "VERTEX");
         await super.tags(manager);

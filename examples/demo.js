@@ -1,16 +1,25 @@
-const Drawing = require('./../src/Drawing');
-const fs = require('fs');
+const NodeJsDrawing = require('../src/NodeJsDrawing');
+const BrowserFriendlyDrawing = require('../src/BrowserFriendlyDrawing');
+const mainModule = require('./mainModule');
 
-let d = new Drawing();
+/**
+ * @param {BrowserFriendlyDrawing | NodeJsDrawing} d
+ * @returns {Promise<void>}
+ */
+async function draw(d) {
+  await d.drawText(10, 0, 10, 0, 'Hello World'); // draw text in the default layer named "0"
+  d.addLayer('l_green', NodeJsDrawing.ACI.GREEN, 'CONTINUOUS');
+  d.setActiveLayer('l_green');
+  await d.drawText(20, -70, 10, 0, 'go green!');
 
-d.drawText(10, 0, 10, 0, 'Hello World'); // draw text in the default layer named "0"
-d.addLayer('l_green', Drawing.ACI.GREEN, 'CONTINUOUS');
-d.setActiveLayer('l_green');
-d.drawText(20, -70, 10, 0, 'go green!');
+  //or fluent
+  d.addLayer('l_yellow', NodeJsDrawing.ACI.YELLOW, 'DOTTED')
+   .setActiveLayer('l_yellow');
+  await d.drawCircle(50, -30, 25);
+}
 
-//or fluent
-d.addLayer('l_yellow', Drawing.ACI.YELLOW, 'DOTTED')
- .setActiveLayer('l_yellow')
- .drawCircle(50, -30, 25);
+module.exports = { draw };
 
-fs.writeFileSync(__filename + '.dxf', d.toDxfString());
+if (require.main === module) {
+  mainModule(draw);
+}

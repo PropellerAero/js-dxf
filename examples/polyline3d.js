@@ -1,12 +1,23 @@
-const Drawing = require('./../src/Drawing');
-const fs = require('fs');
+const NodeJsDrawing = require('../src/NodeJsDrawing');
+const BrowserFriendlyDrawing = require('../src/BrowserFriendlyDrawing');
+const mainModule = require('./mainModule');
+const polylines = require('./polyline3d.json');
 
-let d = new Drawing();
+/**
+ * @param {BrowserFriendlyDrawing | NodeJsDrawing} d
+ * @returns {Promise<void>}
+ */
+async function draw(d) {
+  d.addLayer('contours', NodeJsDrawing.ACI.YELLOW);
+  d.setActiveLayer('contours');
 
-d.addLineType('CONTINUOUS', '______', [])
-d.addLayer('l_red', Drawing.ACI.RED, 'CONTINUOUS');
-d.setActiveLayer('l_red');
+  for (const polyline of polylines) {
+    await d.drawPolyline3d(polyline);
+  }
+}
 
-d.drawPolyline3d([ [0, 0, 20], [10, 10, 5], [20, 10, 5], [30, 30, 40] ]);
+module.exports = { draw };
 
-fs.writeFileSync(__filename + '.dxf', d.toDxfString());
+if (require.main === module) {
+  mainModule(draw);
+}

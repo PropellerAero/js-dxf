@@ -1,4 +1,5 @@
 const Handle = require("./Handle");
+const TagsManager = require("./TagsManager");
 
 class DatabaseObject {
     constructor(subclass = null) {
@@ -15,8 +16,8 @@ class DatabaseObject {
     }
 
     /**
-     *
      * @param {TagsManager} manager
+     * @returns {Promise<void>}
      */
     async tags(manager) {
         await manager.push(5, this.handle);

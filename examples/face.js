@@ -1,15 +1,24 @@
-const Drawing = require('./../src/Drawing');
-const fs = require('fs');
+const NodeJsDrawing = require('../src/NodeJsDrawing');
+const BrowserFriendlyDrawing = require('../src/BrowserFriendlyDrawing');
+const mainModule = require('./mainModule');
 
-let d = new Drawing();
+/**
+ * @param {BrowserFriendlyDrawing | NodeJsDrawing} d
+ * @returns {Promise<void>}
+ */
+async function draw(d) {
+  d.addLayer('face_example', NodeJsDrawing.ACI.GREEN, 'CONTINUOUS');
+  d.setActiveLayer('face_example');
 
-d.addLayer('face_example', Drawing.ACI.GREEN, 'CONTINUOUS');
-d.setActiveLayer('face_example');
+  await d.drawFace(
+    0, 0, 0,
+    0, 1, 1,
+    1, 1, 0,
+    0, 0, 0)
+}
 
-d.drawFace(
-    0,0,0,
-    0,1,1,
-    1,1,0,
-    0,0,0)
+module.exports = { draw };
 
-fs.writeFileSync(__filename + '.dxf', d.toDxfString());
+if (require.main === module) {
+  mainModule(draw);
+}

@@ -1,4 +1,5 @@
 const DatabaseObject = require("./DatabaseObject");
+const TagsManager = require("./TagsManager");
 
 class Mesh extends DatabaseObject {
     /**
@@ -11,6 +12,10 @@ class Mesh extends DatabaseObject {
         this.faceIndices = faceIndices;
     }
 
+    /**
+     * @param {TagsManager} manager
+     * @returns {Promise<void>}
+     */
     async tags(manager) {
         // https://help.autodesk.com/view/ACD/2024/ENU/?guid=GUID-4B9ADA67-87C8-4673-A579-6E4C76FF7025
         await manager.push(0, "MESH");

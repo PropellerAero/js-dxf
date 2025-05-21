@@ -1,4 +1,5 @@
 const DatabaseObject = require("./DatabaseObject");
+const TagsManager = require("./TagsManager");
 
 class Dictionary extends DatabaseObject {
     constructor() {
@@ -16,6 +17,10 @@ class Dictionary extends DatabaseObject {
         this.children[name] = dictionary;
     }
 
+    /**
+     * @param {TagsManager} manager
+     * @returns {Promise<void>}
+     */
     async tags(manager) {
         await manager.push(0, "DICTIONARY");
         await super.tags(manager);

@@ -1,4 +1,5 @@
 const DatabaseObject = require("./DatabaseObject");
+const TagsManager = require("./TagsManager");
 
 class Face extends DatabaseObject {
     constructor(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4) {
@@ -17,6 +18,10 @@ class Face extends DatabaseObject {
         this.z4 = z4;
     }
 
+    /**
+     * @param {TagsManager} manager
+     * @returns {Promise<void>}
+     */
     async tags(manager) {
         //https://www.autodesk.com/techpubs/autocad/acadr14/dxf/3dface_al_u05_c.htm
         await manager.push(0, "3DFACE");

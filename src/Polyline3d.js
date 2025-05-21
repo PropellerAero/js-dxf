@@ -1,6 +1,7 @@
 const DatabaseObject = require("./DatabaseObject");
 const Handle = require("./Handle");
 const Vertex = require("./Vertex");
+const TagsManager = require("./TagsManager");
 
 class Polyline3d extends DatabaseObject {
     /**
@@ -16,7 +17,10 @@ class Polyline3d extends DatabaseObject {
         });
         this.seqendHandle = Handle.next();
     }
-
+    /**
+     * @param {TagsManager} manager
+     * @returns {Promise<void>}
+     */
     async tags(manager) {
         await manager.push(0, "POLYLINE");
         await super.tags(manager);

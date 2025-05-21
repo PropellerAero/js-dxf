@@ -1,4 +1,5 @@
 const DatabaseObject = require("./DatabaseObject");
+const TagsManager = require("./TagsManager");
 
 class Line3d extends DatabaseObject {
     constructor(x1, y1, z1, x2, y2, z2) {
@@ -11,6 +12,10 @@ class Line3d extends DatabaseObject {
         this.z2 = z2;
     }
 
+    /**
+     * @param {TagsManager} manager
+     * @returns {Promise<void>}
+     */
     async tags(manager) {
         //https://www.autodesk.com/techpubs/autocad/acadr14/dxf/line_al_u05_c.htm
         await manager.push(0, "LINE");

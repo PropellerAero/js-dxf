@@ -1,4 +1,5 @@
 const DatabaseObject = require("./DatabaseObject");
+const TagsManager = require("./TagsManager");
 
 class TextStyle extends DatabaseObject {
     fontFileName = 'txt';
@@ -7,6 +8,10 @@ class TextStyle extends DatabaseObject {
         this.name = name;
     }
 
+    /**
+     * @param {TagsManager} manager
+     * @returns {Promise<void>}
+     */
     async tags(manager) {
         await manager.push(0, "STYLE");
         await super.tags(manager);

@@ -1,4 +1,5 @@
 const DatabaseObject = require("./DatabaseObject");
+const TagsManager = require("./TagsManager");
 
 class AppId extends DatabaseObject {
     constructor(name) {
@@ -6,6 +7,10 @@ class AppId extends DatabaseObject {
         this.name = name;
     }
 
+    /**
+     * @param {TagsManager} manager
+     * @returns {Promise<void>}
+     */
     async tags(manager) {
         await manager.push(0, "APPID");
         await super.tags(manager);

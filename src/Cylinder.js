@@ -1,4 +1,5 @@
 const DatabaseObject = require("./DatabaseObject");
+const TagsManager = require("./TagsManager");
 
 class Cylinder extends DatabaseObject {
     /**
@@ -32,6 +33,10 @@ class Cylinder extends DatabaseObject {
             (this.extrusionDirectionZ = extrusionDirectionZ);
     }
 
+    /**
+     * @param {TagsManager} manager
+     * @returns {Promise<void>}
+     */
     async tags(manager) {
         await manager.push(0, "CIRCLE");
         await super.tags(manager);

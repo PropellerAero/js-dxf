@@ -1,4 +1,5 @@
 const DatabaseObject = require("./DatabaseObject");
+const TagsManager = require("./TagsManager");
 
 class Ellipse extends DatabaseObject {
     /**
@@ -22,6 +23,10 @@ class Ellipse extends DatabaseObject {
         this.endAngle = endAngle;
     }
 
+    /**
+     * @param {TagsManager} manager
+     * @returns {Promise<void>}
+     */
     async tags(manager) {
         // https://www.autodesk.com/techpubs/autocad/acadr14/dxf/ellipse_al_u05_c.htm
         await manager.push(0, "ELLIPSE");

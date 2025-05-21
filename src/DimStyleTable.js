@@ -1,5 +1,6 @@
 const DatabaseObject = require("./DatabaseObject");
 const Table = require("./Table");
+const TagsManager = require("./TagsManager");
 
 class DimStyleTable extends Table {
     constructor(name) {
@@ -7,6 +8,10 @@ class DimStyleTable extends Table {
         this.subclassMarkers.push("AcDbDimStyleTable");
     }
 
+    /**
+     * @param {TagsManager} manager
+     * @returns {Promise<void>}
+     */
     async tags(manager) {
         await manager.push(0, "TABLE");
         await manager.push(2, this.name);

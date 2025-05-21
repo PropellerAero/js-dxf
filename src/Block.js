@@ -1,4 +1,5 @@
 const DatabaseObject = require("./DatabaseObject");
+const TagsManager = require("./TagsManager");
 
 class Block extends DatabaseObject {
     constructor(name) {
@@ -8,6 +9,10 @@ class Block extends DatabaseObject {
         this.recordHandle = null;
     }
 
+    /**
+     * @param {TagsManager} manager
+     * @returns {Promise<void>}
+     */
     async tags(manager) {
         await manager.push(0, "BLOCK");
         await super.tags(manager);

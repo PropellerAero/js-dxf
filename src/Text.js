@@ -1,4 +1,5 @@
 const DatabaseObject = require("./DatabaseObject");
+const TagsManager = require("./TagsManager");
 
 const H_ALIGN_CODES = ["left", "center", "right"];
 const V_ALIGN_CODES = ["baseline", "bottom", "middle", "top"];
@@ -32,6 +33,10 @@ class Text extends DatabaseObject {
         this.vAlign = verticalAlignment;
     }
 
+    /**
+     * @param {TagsManager} manager
+     * @returns {Promise<void>}
+     */
     async tags(manager) {
         //https://www.autodesk.com/techpubs/autocad/acadr14/dxf/text_al_u05_c.htm
         await manager.push(0, "TEXT");

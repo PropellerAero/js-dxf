@@ -1,4 +1,5 @@
 const DatabaseObject = require("./DatabaseObject");
+const TagsManager = require("./TagsManager");
 
 class Polyline extends DatabaseObject {
     /**
@@ -15,6 +16,10 @@ class Polyline extends DatabaseObject {
         this.endWidth = endWidth;
     }
 
+    /**
+     * @param {TagsManager} manager
+     * @returns {Promise<void>}
+     */
     async tags(manager) {
         await manager.push(0, "LWPOLYLINE");
         await super.tags(manager);

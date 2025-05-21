@@ -1,20 +1,29 @@
-const Drawing = require("./../src/Drawing");
-const fs = require("fs");
+const NodeJsDrawing = require('../src/NodeJsDrawing');
+const BrowserFriendlyDrawing = require('../src/BrowserFriendlyDrawing');
+const mainModule = require('./mainModule');
 
-let d = new Drawing();
+/**
+ * @param {BrowserFriendlyDrawing | NodeJsDrawing} d
+ * @returns {Promise<void>}
+ */
+async function draw(d) {
+  d.addLayer("inscribed_polygon", NodeJsDrawing.ACI.YELLOW, "CONTINUOUS");
+  d.setActiveLayer("inscribed_polygon");
 
-d.addLayer("inscribed_polygon", Drawing.ACI.YELLOW, "CONTINUOUS");
-d.setActiveLayer("inscribed_polygon");
+  await d.drawPolygon(0, 0, 5, 10, 45); // Rotated with 45°
+  await d.drawCircle(0, 0, 10);
+  await d.drawText(-3, 0, 1, 0, "Inscribed");
 
-d.drawPolygon(0, 0, 5, 10, 45); // Rotated with 45°
-d.drawCircle(0, 0, 10);
-d.drawText(-3, 0, 1, 0, "Inscribed");
+  d.addLayer("circumscribed_polygon", NodeJsDrawing.ACI.GREEN, "CONTINUOUS");
+  d.setActiveLayer("circumscribed_polygon");
 
-d.addLayer("circumscribed_polygon", Drawing.ACI.GREEN, "CONTINUOUS");
-d.setActiveLayer("circumscribed_polygon");
+  await d.drawPolygon(30, 0, 5, 10, 0, true);
+  await d.drawCircle(30, 0, 10);
+  await d.drawText(25, 0, 1, 0, "Circumscribed");
+}
 
-d.drawPolygon(30, 0, 5, 10, 0, true);
-d.drawCircle(30, 0, 10);
-d.drawText(25, 0, 1, 0, "Circumscribed");
+module.exports = { draw };
 
-fs.writeFileSync(__filename + ".dxf", d.toDxfString());
+if (require.main === module) {
+  mainModule(draw);
+}

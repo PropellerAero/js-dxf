@@ -1,4 +1,5 @@
 const DatabaseObject = require("./DatabaseObject");
+const TagsManager = require("./TagsManager");
 
 class Spline extends DatabaseObject {
     /**
@@ -77,6 +78,10 @@ class Spline extends DatabaseObject {
         // const splineType = 1024 * closed + 128 * periodic + 8 * rational + 4 * planar + 2 * linear
     }
 
+    /**
+     * @param {TagsManager} manager
+     * @returns {Promise<void>}
+     */
     async tags(manager) {
         // https://www.autodesk.com/techpubs/autocad/acad2000/dxf/spline_dxf_06.htm
         await manager.push(0, "SPLINE");
@@ -97,7 +102,7 @@ class Spline extends DatabaseObject {
         await manager.push(43, 1e-7);
         await manager.push(44, 1e-10);
 
-        for (const knot of knots) {
+        for (const knot of this.knots) {
             await manager.push(40, knot);
         }
 
