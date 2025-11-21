@@ -1,6 +1,6 @@
 {
     "name": "@propelleraero/dxf-writer",
-    "version": "3.1.0",
+    "version": "4.0.0",
     "description": "Dead simple 2D DXF writer",
     "main": "index.js",
     "types": "./index.d.ts",
