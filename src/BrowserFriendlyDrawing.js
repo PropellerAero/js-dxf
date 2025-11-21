@@ -1,31 +1,31 @@
-const { once } = require("./once");
-const AppId = require("./AppId");
-const Arc = require("./Arc");
-const Block = require("./Block");
-const BlockRecord = require("./BlockRecord");
-const Circle = require("./Circle");
-const Cylinder = require("./Cylinder");
-const Dictionary = require("./Dictionary");
-const DimStyleTable = require("./DimStyleTable");
-const Ellipse = require("./Ellipse");
-const Face = require("./Face");
-const Handle = require("./Handle");
-const Layer = require("./Layer");
-const Line = require("./Line");
-const Line3d = require("./Line3d");
-const LineType = require("./LineType");
-const Mesh = require("./Mesh");
-const Point = require("./Point");
-const Polyline = require("./Polyline");
-const Polyline3d = require("./Polyline3d");
-const Spline = require("./Spline");
-const Table = require("./Table");
-const TagsManager = require("./TagsManager");
-const Text = require("./Text");
-const TextStyle = require("./TextStyle");
-const Viewport = require("./Viewport");
-const Vertex = require("./Vertex");
-const StringWritableStream = require("./StringWritableStream");
+const { once } = require('./once');
+const AppId = require('./AppId');
+const Arc = require('./Arc');
+const Block = require('./Block');
+const BlockRecord = require('./BlockRecord');
+const Circle = require('./Circle');
+const Cylinder = require('./Cylinder');
+const Dictionary = require('./Dictionary');
+const DimStyleTable = require('./DimStyleTable');
+const Ellipse = require('./Ellipse');
+const Face = require('./Face');
+const Handle = require('./Handle');
+const Layer = require('./Layer');
+const Line = require('./Line');
+const Line3d = require('./Line3d');
+const LineType = require('./LineType');
+const Mesh = require('./Mesh');
+const Point = require('./Point');
+const Polyline = require('./Polyline');
+const Polyline3d = require('./Polyline3d');
+const Spline = require('./Spline');
+const Table = require('./Table');
+const TagsManager = require('./TagsManager');
+const Text = require('./Text');
+const TextStyle = require('./TextStyle');
+const Viewport = require('./Viewport');
+const Vertex = require('./Vertex');
+const StringWritableStream = require('./StringWritableStream');
 
 class BrowserFriendlyDrawing {
   constructor(stream) {
@@ -38,7 +38,7 @@ class BrowserFriendlyDrawing {
     this._dictionary = new Dictionary();
     this._finalStream = stream;
 
-    this.setUnits("Unitless");
+    this.setUnits('Unitless');
 
     for (const ltype of BrowserFriendlyDrawing.LINE_TYPES) {
       this.addLineType(ltype.name, ltype.description, ltype.elements);
@@ -48,7 +48,7 @@ class BrowserFriendlyDrawing {
       this.addLayer(l.name, l.colorNumber, l.lineTypeName);
     }
 
-    this.setActiveLayer("0");
+    this.setActiveLayer('0');
     this._generateAutocadExtras();
 
     this._init();
@@ -350,7 +350,7 @@ class BrowserFriendlyDrawing {
   async drawPolyline3d(points) {
     points.forEach((point) => {
       if (point.length !== 3) {
-        throw "Require 3D coordinates";
+        throw 'Require 3D coordinates';
       }
     });
     await this._activeLayer.writeShape(
@@ -448,8 +448,8 @@ class BrowserFriendlyDrawing {
     height,
     rotation,
     value,
-    horizontalAlignment = "left",
-    verticalAlignment = "baseline"
+    horizontalAlignment = 'left',
+    verticalAlignment = 'baseline'
   ) {
     await this._activeLayer.writeShape(
       this._modelSpace,
@@ -487,17 +487,17 @@ class BrowserFriendlyDrawing {
       this._createTemporaryTagsManager();
     await this._writeHeader(headerTagsManager);
     headerStream.end();
-    await once(headerStream, "finish");
+    await once(headerStream, 'finish');
 
     await this._tempShapes.tagsManager.finaliseWriting();
     this._tempShapes.stream.end();
-    await once(this._tempShapes.stream, "finish");
+    await once(this._tempShapes.stream, 'finish');
 
     const { tagsManager: footerTagsManager, stream: footerStream } =
       this._createTemporaryTagsManager();
     await this._writeFooter(footerTagsManager);
     footerStream.end();
-    await once(footerStream, "finish");
+    await once(footerStream, 'finish');
 
     await this._pipeline(
       [headerStream, this._tempShapes.stream, footerStream],
@@ -511,53 +511,53 @@ class BrowserFriendlyDrawing {
    * compatible result.
    */
   _generateAutocadExtras() {
-    if (!this._headers["ACADVER"]) {
+    if (!this._headers['ACADVER']) {
       /* AutoCAD 2010 version. */
-      this.header("ACADVER", [[1, "AC1024"]]);
+      this.header('ACADVER', [[1, 'AC1024']]);
     }
 
-    if (!this._lineTypes["ByBlock"]) {
-      this.addLineType("ByBlock", "", []);
+    if (!this._lineTypes['ByBlock']) {
+      this.addLineType('ByBlock', '', []);
     }
-    if (!this._lineTypes["ByLayer"]) {
-      this.addLineType("ByLayer", "", []);
+    if (!this._lineTypes['ByLayer']) {
+      this.addLineType('ByLayer', '', []);
     }
 
-    let vpTable = this._tables["VPORT"];
+    let vpTable = this._tables['VPORT'];
     if (!vpTable) {
-      vpTable = this.addTable("VPORT");
+      vpTable = this.addTable('VPORT');
     }
-    let styleTable = this._tables["STYLE"];
+    let styleTable = this._tables['STYLE'];
     if (!styleTable) {
-      styleTable = this.addTable("STYLE");
+      styleTable = this.addTable('STYLE');
     }
-    if (!this._tables["VIEW"]) {
-      this.addTable("VIEW");
+    if (!this._tables['VIEW']) {
+      this.addTable('VIEW');
     }
-    if (!this._tables["UCS"]) {
-      this.addTable("UCS");
+    if (!this._tables['UCS']) {
+      this.addTable('UCS');
     }
-    let appIdTable = this._tables["APPID"];
+    let appIdTable = this._tables['APPID'];
     if (!appIdTable) {
-      appIdTable = this.addTable("APPID");
+      appIdTable = this.addTable('APPID');
     }
-    if (!this._tables["DIMSTYLE"]) {
-      const t = new DimStyleTable("DIMSTYLE");
-      this._tables["DIMSTYLE"] = t;
+    if (!this._tables['DIMSTYLE']) {
+      const t = new DimStyleTable('DIMSTYLE');
+      this._tables['DIMSTYLE'] = t;
     }
 
-    vpTable.add(new Viewport("*ACTIVE", 1000));
+    vpTable.add(new Viewport('*ACTIVE', 1000));
 
     /* Non-default text alignment is not applied without this entry. */
-    styleTable.add(new TextStyle("standard"));
+    styleTable.add(new TextStyle('standard'));
 
-    appIdTable.add(new AppId("ACAD"));
+    appIdTable.add(new AppId('ACAD'));
 
-    this._modelSpace = this.addBlock("*Model_Space");
-    this.addBlock("*Paper_Space");
+    this._modelSpace = this.addBlock('*Model_Space');
+    this.addBlock('*Paper_Space');
 
     const d = new Dictionary();
-    this._dictionary.addChildDictionary("ACAD_GROUP", d);
+    this._dictionary.addChildDictionary('ACAD_GROUP', d);
   }
 
   /**
@@ -593,16 +593,16 @@ class BrowserFriendlyDrawing {
    */
   setUnits(unit) {
     let units =
-      typeof BrowserFriendlyDrawing.UNITS[unit] != "undefined"
+      typeof BrowserFriendlyDrawing.UNITS[unit] != 'undefined'
         ? BrowserFriendlyDrawing.UNITS[unit]
-        : BrowserFriendlyDrawing.UNITS["Unitless"];
-    this.header("INSUNITS", [[70, units]]);
+        : BrowserFriendlyDrawing.UNITS['Unitless'];
+    this.header('INSUNITS', [[70, units]]);
     return this;
   }
 
   async _writeHeader(tagsManager) {
     // Setup
-    const blockRecordTable = new Table("BLOCK_RECORD");
+    const blockRecordTable = new Table('BLOCK_RECORD');
     const blocks = Object.values(this._blocks);
     for (const b of blocks) {
       const r = new BlockRecord(b.name);
@@ -611,8 +611,8 @@ class BrowserFriendlyDrawing {
     const ltypeTable = this._ltypeTable();
     const layerTable = this._layerTable();
     // Header section start.
-    await tagsManager.start("HEADER");
-    await tagsManager.addHeaderVariable("HANDSEED", [[5, Handle.peek()]]);
+    await tagsManager.start('HEADER');
+    await tagsManager.addHeaderVariable('HANDSEED', [[5, Handle.peek()]]);
     const variables = Object.entries(this._headers);
     for (const v of variables) {
       const [name, values] = v;
@@ -622,13 +622,13 @@ class BrowserFriendlyDrawing {
     // Header section end.
 
     // Classes section start.
-    await tagsManager.start("CLASSES");
+    await tagsManager.start('CLASSES');
     // Empty CLASSES section for compatibility
     await tagsManager.end();
     // Classes section end.
 
     // Tables section start.
-    await tagsManager.start("TABLES");
+    await tagsManager.start('TABLES');
     await ltypeTable.tags(tagsManager);
     await layerTable.tags(tagsManager);
     const tables = Object.values(this._tables);
@@ -640,7 +640,7 @@ class BrowserFriendlyDrawing {
     // Tables section end.
 
     // Blocks section start.
-    await tagsManager.start("BLOCKS");
+    await tagsManager.start('BLOCKS');
     for (const b of blocks) {
       await b.tags(tagsManager);
     }
@@ -648,7 +648,7 @@ class BrowserFriendlyDrawing {
     // Blocks section end.
 
     // Entities section start.
-    await tagsManager.start("ENTITIES");
+    await tagsManager.start('ENTITIES');
     await tagsManager.finaliseWriting();
   }
 
@@ -657,12 +657,12 @@ class BrowserFriendlyDrawing {
     // Entities section end.
 
     // Objects section start.
-    await tagsManager.start("OBJECTS");
+    await tagsManager.start('OBJECTS');
     await this._dictionary.tags(tagsManager);
     await tagsManager.end();
     // Objects section end.
 
-    await tagsManager.push(0, "EOF");
+    await tagsManager.push(0, 'EOF');
     await tagsManager.finaliseWriting();
   }
 
@@ -684,14 +684,14 @@ class BrowserFriendlyDrawing {
   }
 
   _ltypeTable() {
-    const t = new Table("LTYPE");
+    const t = new Table('LTYPE');
     const ltypes = Object.values(this._lineTypes);
     for (const lt of ltypes) t.add(lt);
     return t;
   }
 
   _layerTable() {
-    const t = new Table("LAYER");
+    const t = new Table('LAYER');
     const layers = Object.values(this._layers);
     for (const l of layers) t.add(l);
     return t;
@@ -712,16 +712,16 @@ BrowserFriendlyDrawing.ACI = {
 };
 
 BrowserFriendlyDrawing.LINE_TYPES = [
-  { name: "CONTINUOUS", description: "______", elements: [] },
-  { name: "DASHED", description: "_ _ _ ", elements: [5.0, -5.0] },
-  { name: "DOTTED", description: ". . . ", elements: [0.0, -5.0] },
+  { name: 'CONTINUOUS', description: '______', elements: [] },
+  { name: 'DASHED', description: '_ _ _ ', elements: [5.0, -5.0] },
+  { name: 'DOTTED', description: '. . . ', elements: [0.0, -5.0] },
 ];
 
 BrowserFriendlyDrawing.LAYERS = [
   {
-    name: "0",
+    name: '0',
     colorNumber: BrowserFriendlyDrawing.ACI.WHITE,
-    lineTypeName: "CONTINUOUS",
+    lineTypeName: 'CONTINUOUS',
   },
 ];
 
@@ -745,8 +745,8 @@ BrowserFriendlyDrawing.UNITS = {
   Decameters: 15,
   Hectometers: 16,
   Gigameters: 17,
-  "Astronomical units": 18,
-  "Light years": 19,
+  'Astronomical units': 18,
+  'Light years': 19,
   Parsecs: 20,
 };
 
