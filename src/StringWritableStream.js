@@ -1,4 +1,4 @@
-const SUPPORTED_EVENTS = ['finish', 'error'];
+const SUPPORTED_EVENTS = ["finish", "error"];
 
 class StringWritableStream {
   constructor() {
@@ -27,15 +27,15 @@ class StringWritableStream {
 
   write(chunk) {
     if (this._closed) {
-      throw new Error('Stream is closed');
+      throw new Error("Stream is closed");
     }
 
-    if (typeof chunk === 'string') {
+    if (typeof chunk === "string") {
       this._chunks.push(chunk);
     } else if (chunk instanceof Uint8Array) {
       this._chunks.push(new TextDecoder().decode(chunk));
     } else {
-      throw new TypeError('Chunk must be a string or Uint8Array');
+      throw new TypeError("Chunk must be a string or Uint8Array");
     }
 
     return true;
@@ -46,15 +46,15 @@ class StringWritableStream {
     this.writable = false;
 
     process.nextTick(() =>
-      this._eventTarget.dispatchEvent(new Event('finish'))
+      this._eventTarget.dispatchEvent(new Event("finish"))
     );
   }
 
   toString() {
     if (!this._closed) {
-      throw new Error('Stream is not closed yet');
+      throw new Error("Stream is not closed yet");
     }
-    return this._chunks.join('');
+    return this._chunks.join("");
   }
 }
 
