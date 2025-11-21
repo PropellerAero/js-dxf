@@ -45,7 +45,9 @@ class StringWritableStream {
     this._closed = true;
     this.writable = false;
 
-    process.nextTick(() => this._eventTarget.dispatchEvent(new Event('finish')));
+    process.nextTick(() =>
+      this._eventTarget.dispatchEvent(new Event('finish'))
+    );
   }
 
   toString() {
@@ -56,7 +58,4 @@ class StringWritableStream {
   }
 }
 
-
-module.exports = {
-  StringWritableStream
-}
+module.exports = StringWritableStream;
