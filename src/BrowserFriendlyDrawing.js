@@ -274,13 +274,14 @@ class BrowserFriendlyDrawing {
   /**
    * @param {number} x
    * @param {number} y
+   * @param {number} z
    * @returns {Promise<this>}
    */
-  async drawPoint(x, y) {
+  async drawPoint(x, y, z) {
     await this._activeLayer.writeShape(
       this._modelSpace,
       this._tempShapes.tagsManager,
-      new Point(x, y)
+      new Point(x, y, z)
     );
     return this;
   }
