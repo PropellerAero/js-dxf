@@ -1233,12 +1233,31 @@ SVG.Element = SVG.invent({
 
       // act as a setter if svg is given
       if (svg && this instanceof SVG.Parent) {
-        // dump raw svg
-        well.innerHTML = '<svg>' + svg.replace(/\n/, '').replace(/<(\w+)([^<]+?)\/>/g, '<$1$2></$1>') + '</svg>'
+        // Securely parse SVG using DOMParser to prevent XSS
+        var parser = new DOMParser()
+        var svgContent = '<svg>' + svg.replace(/\n/g, '').replace(/<(\w+)([^<]+?)\/>/g, '<$1$2></$1>') + '</svg>'
+        var doc = parser.parseFromString(svgContent, 'image/svg+xml')
 
-        // transplant nodes
-        for (var i = 0, il = well.firstChild.childNodes.length; i < il; i++)
-          this.node.appendChild(well.firstChild.firstChild)
+        // Check for parsing errors
+        var parserError = doc.querySelector('parsererror')
+        if (parserError) {
+          throw new Error('Invalid SVG content')
+        }
+
+        // Sanitize: only import element nodes, no scripts or event handlers
+        var parsedSvg = doc.documentElement
+        if (parsedSvg && parsedSvg.childNodes) {
+          for (var i = 0; i < parsedSvg.childNodes.length; i++) {
+            var node = parsedSvg.childNodes[i]
+            // Only import element nodes (skip text, comments, etc.)
+            if (node.nodeType === 1) { // ELEMENT_NODE
+              var sanitized = this._sanitizeSvgNode(node)
+              if (sanitized) {
+                this.node.appendChild(sanitized)
+              }
+            }
+          }
+        }
 
       // otherwise act as a getter
       } else {
@@ -1256,6 +1275,56 @@ SVG.Element = SVG.invent({
       }
 
       return this
+    }
+  // Sanitize SVG nodes to prevent XSS
+  , _sanitizeSvgNode: function(node) {
+      // Block dangerous elements
+      var tagName = node.nodeName.toLowerCase()
+      var dangerousTags = ['script', 'iframe', 'object', 'embed', 'link', 'style']
+      if (dangerousTags.indexOf(tagName) !== -1) {
+        return null
+      }
+
+      // Create a clean copy of the node
+      var cleanNode = document.createElementNS('http://www.w3.org/2000/svg', tagName)
+
+      // Copy safe attributes only (strip event handlers)
+      if (node.attributes) {
+        for (var i = 0; i < node.attributes.length; i++) {
+          var attr = node.attributes[i]
+          var attrName = attr.name.toLowerCase()
+
+          // Block event handler attributes (onclick, onload, etc.)
+          if (attrName.indexOf('on') === 0) {
+            continue
+          }
+
+          // Block javascript: protocols
+          if (attr.value && attr.value.toLowerCase().indexOf('javascript:') !== -1) {
+            continue
+          }
+
+          // Copy safe attribute
+          cleanNode.setAttribute(attr.name, attr.value)
+        }
+      }
+
+      // Recursively sanitize child nodes
+      if (node.childNodes) {
+        for (var j = 0; j < node.childNodes.length; j++) {
+          var childNode = node.childNodes[j]
+          if (childNode.nodeType === 1) { // ELEMENT_NODE
+            var sanitizedChild = this._sanitizeSvgNode(childNode)
+            if (sanitizedChild) {
+              cleanNode.appendChild(sanitizedChild)
+            }
+          } else if (childNode.nodeType === 3) { // TEXT_NODE
+            cleanNode.appendChild(document.createTextNode(childNode.nodeValue))
+          }
+        }
+      }
+
+      return cleanNode
     }
   // write svgjs data to the dom
   , writeDataToDom: function() {
