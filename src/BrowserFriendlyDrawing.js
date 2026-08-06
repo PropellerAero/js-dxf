@@ -37,6 +37,8 @@ class BrowserFriendlyDrawing {
     this._blocks = {};
     this._dictionary = new Dictionary();
     this._finalStream = stream;
+    this._ended = false;
+    this._pendingShapeWrites = Promise.resolve();
 
     this.setUnits('Unitless');
 
@@ -102,9 +104,7 @@ class BrowserFriendlyDrawing {
    * @returns {Promise<this>}
    */
   async drawArc(x1, y1, r, startAngle, endAngle) {
-    await this._activeLayer.writeShape(
-      this._modelSpace,
-      this._tempShapes.tagsManager,
+    await this._writeShape(
       new Arc(x1, y1, r, startAngle, endAngle)
     );
     return this;
@@ -117,9 +117,7 @@ class BrowserFriendlyDrawing {
    * @returns {Promise<this>}
    */
   async drawCircle(x1, y1, r) {
-    await this._activeLayer.writeShape(
-      this._modelSpace,
-      this._tempShapes.tagsManager,
+    await this._writeShape(
       new Circle(x1, y1, r)
     );
     return this;
@@ -146,9 +144,7 @@ class BrowserFriendlyDrawing {
     extrusionDirectionY,
     extrusionDirectionZ
   ) {
-    await this._activeLayer.writeShape(
-      this._modelSpace,
-      this._tempShapes.tagsManager,
+    await this._writeShape(
       new Cylinder(
         x1,
         y1,
@@ -183,9 +179,7 @@ class BrowserFriendlyDrawing {
     startAngle = 0,
     endAngle = 2 * Math.PI
   ) {
-    await this._activeLayer.writeShape(
-      this._modelSpace,
-      this._tempShapes.tagsManager,
+    await this._writeShape(
       new Ellipse(
         x1,
         y1,
@@ -215,9 +209,7 @@ class BrowserFriendlyDrawing {
    * @returns {Promise<this>}
    */
   async drawFace(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4) {
-    await this._activeLayer.writeShape(
-      this._modelSpace,
-      this._tempShapes.tagsManager,
+    await this._writeShape(
       new Face(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4)
     );
     return this;
@@ -231,9 +223,7 @@ class BrowserFriendlyDrawing {
    * @returns {Promise<this>}
    */
   async drawLine(x1, y1, x2, y2) {
-    await this._activeLayer.writeShape(
-      this._modelSpace,
-      this._tempShapes.tagsManager,
+    await this._writeShape(
       new Line(x1, y1, x2, y2)
     );
     return this;
@@ -249,9 +239,7 @@ class BrowserFriendlyDrawing {
    * @returns {Promise<this>}
    */
   async drawLine3d(x1, y1, z1, x2, y2, z2) {
-    await this._activeLayer.writeShape(
-      this._modelSpace,
-      this._tempShapes.tagsManager,
+    await this._writeShape(
       new Line3d(x1, y1, z1, x2, y2, z2)
     );
     return this;
@@ -263,9 +251,7 @@ class BrowserFriendlyDrawing {
    * @returns {Promise<this>}
    */
   async drawMesh(vertices, faceIndices) {
-    await this._activeLayer.writeShape(
-      this._modelSpace,
-      this._tempShapes.tagsManager,
+    await this._writeShape(
       new Mesh(vertices, faceIndices)
     );
     return this;
@@ -278,9 +264,7 @@ class BrowserFriendlyDrawing {
    * @returns {Promise<this>}
    */
   async drawPoint(x, y, z) {
-    await this._activeLayer.writeShape(
-      this._modelSpace,
-      this._tempShapes.tagsManager,
+    await this._writeShape(
       new Point(x, y, z)
     );
     return this;
@@ -320,9 +304,7 @@ class BrowserFriendlyDrawing {
         y + d * Math.cos(rotationRad + i * angle),
       ]);
     }
-    await this._activeLayer.writeShape(
-      this._modelSpace,
-      this._tempShapes.tagsManager,
+    await this._writeShape(
       new Polyline(vertices, true)
     );
     return this;
@@ -336,9 +318,7 @@ class BrowserFriendlyDrawing {
    * @returns {Promise<this>}
    */
   async drawPolyline(points, closed = false, startWidth = 0, endWidth = 0) {
-    await this._activeLayer.writeShape(
-      this._modelSpace,
-      this._tempShapes.tagsManager,
+    await this._writeShape(
       new Polyline(points, closed, startWidth, endWidth)
     );
     return this;
@@ -354,9 +334,7 @@ class BrowserFriendlyDrawing {
         throw 'Require 3D coordinates';
       }
     });
-    await this._activeLayer.writeShape(
-      this._modelSpace,
-      this._tempShapes.tagsManager,
+    await this._writeShape(
       new Polyline3d(points)
     );
     return this;
@@ -425,9 +403,7 @@ class BrowserFriendlyDrawing {
     weights = null,
     fitPoints = []
   ) {
-    await this._activeLayer.writeShape(
-      this._modelSpace,
-      this._tempShapes.tagsManager,
+    await this._writeShape(
       new Spline(controlPoints, degree, knots, weights, fitPoints)
     );
     return this;
@@ -452,9 +428,7 @@ class BrowserFriendlyDrawing {
     horizontalAlignment = 'left',
     verticalAlignment = 'baseline'
   ) {
-    await this._activeLayer.writeShape(
-      this._modelSpace,
-      this._tempShapes.tagsManager,
+    await this._writeShape(
       new Text(
         x1,
         y1,
@@ -475,15 +449,39 @@ class BrowserFriendlyDrawing {
    * @returns {Promise<this>}
    */
   async drawVertex(x1, y1, z1) {
-    await this._activeLayer.writeShape(
-      this._modelSpace,
-      this._tempShapes.tagsManager,
+    await this._writeShape(
       new Vertex(x1, y1, z1)
     );
     return this;
   }
 
+  /**
+   * Serialises shape writes so end() can wait for every in-flight draw before
+   * computing $HANDSEED and the symbol tables. Handles are allocated when the
+   * shape is constructed, so $HANDSEED must be written after the last draw.
+   * @param {DatabaseObject} shape
+   * @returns {Promise<void>}
+   */
+  _writeShape(shape) {
+    if (this._ended) {
+      throw new Error('Cannot draw after end() has been called');
+    }
+
+    const layer = this._activeLayer;
+    const write = this._pendingShapeWrites.then(() =>
+      layer.writeShape(this._modelSpace, this._tempShapes.tagsManager, shape)
+    );
+    /* A failed write still rejects the caller's promise; keep the chain alive. */
+    this._pendingShapeWrites = write.catch(() => {});
+    return write;
+  }
+
   async end() {
+    /* Draws that race end() would otherwise land with handles above the
+     * already-written $HANDSEED, producing a file AutoCAD discards. */
+    this._ended = true;
+    await this._pendingShapeWrites;
+
     const { tagsManager: headerTagsManager, stream: headerStream } =
       this._createTemporaryTagsManager();
     await this._writeHeader(headerTagsManager);
