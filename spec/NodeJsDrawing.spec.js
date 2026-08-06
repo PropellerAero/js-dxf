@@ -79,6 +79,31 @@ describe("NodeJsDrawing", function () {
     expect(polylineCount).toEqual(seqendCount);
   });
 
+  it("rejects draws made after end() has been called", async function () {
+    const { outputFilepath } = setup(outputDir, "draw-after-end.dxf");
+    const stream = fs.createWriteStream(outputFilepath);
+    const d = new Drawing(stream);
+
+    const ended = d.end();
+
+    let error = null;
+    try {
+      await d.drawCircle(0, 0, 10);
+    } catch (e) {
+      error = e;
+    }
+
+    expect(error).not.toBeNull();
+    expect(error.message).toEqual("Cannot draw after end() has been called");
+
+    await ended;
+    stream.end();
+    await once(stream, "finish");
+
+    // The rejected draw must not leak into the output.
+    expect(getFile(outputFilepath)).not.toContain("CIRCLE");
+  });
+
   it("can draw a mesh to stream", async function () {
     const { outputFilepath, fixtureFilepath } = setup(outputDir, "mesh-simple-stream.dxf");
     const stream = fs.createWriteStream(outputFilepath);
