@@ -87,3 +87,17 @@ Example preview in the LibreCAD:
 let d = new Drawing();
 d.addLineType('DASHDOT', '_ . _ ', [0.5, -0.5, 0.0, -0.5]);
 ```
+
+## Releasing (Propeller fork)
+
+Releases are manual and run from your local machine — proper CI to be done later.
+
+1. Get your PR approved and merged into `master`.
+2. On a fresh, clean `master` (`git checkout master && git pull`), bump the
+   `version` in `package.json` by hand, and get that bump merged to `master` too.
+3. Run `./release-package.sh` — it runs the tests and publishes the version in
+   `package.json` to npm as-is (you need npm publish rights on `@propelleraero`).
+   It refuses versions that are already published.
+4. For a pre-release, run `./release-package-beta.sh` instead: it publishes
+   `<version>-beta.N` under the npm `beta` dist-tag (finding the next free N on
+   npm) and leaves `package.json` untouched.
