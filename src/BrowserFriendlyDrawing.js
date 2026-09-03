@@ -747,6 +747,11 @@ BrowserFriendlyDrawing.UNITS = {
   'Astronomical units': 18,
   'Light years': 19,
   Parsecs: 20,
+  // US survey units, added around DXF R2018.
+  'US Survey Feet': 21,
+  'US Survey Inch': 22,
+  'US Survey Yard': 23,
+  'US Survey Mile': 24,
 };
 
 module.exports = BrowserFriendlyDrawing;

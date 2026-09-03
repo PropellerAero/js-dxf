@@ -71,6 +71,32 @@ describe("BrowserFriendlyDrawing", function () {
     expect(stream.toString()).toEqual(getFile(fixtureFilepath));
   });
 
+  it("writes $INSUNITS 21 for US Survey Feet", async function () {
+    const stream = new StringWritableStream();
+    const d = new Drawing(stream);
+
+    d.setUnits("US Survey Feet");
+
+    await d.end();
+    stream.end();
+    await once(stream, "finish");
+
+    expect(stream.toString()).toContain("$INSUNITS\n70\n21");
+  });
+
+  it("falls back to Unitless for an unknown unit name", async function () {
+    const stream = new StringWritableStream();
+    const d = new Drawing(stream);
+
+    d.setUnits("Cubits");
+
+    await d.end();
+    stream.end();
+    await once(stream, "finish");
+
+    expect(stream.toString()).toContain("$INSUNITS\n70\n0");
+  });
+
   it("cannot add a layer with a bad name", function () {
     const stream = new StringWritableStream();
     const d = new Drawing(stream);

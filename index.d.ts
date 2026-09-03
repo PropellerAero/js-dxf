@@ -20,7 +20,11 @@ declare module '@propelleraero/dxf-writer' {
     | 'Gigameters'
     | 'Astronomical units'
     | 'Light years'
-    | 'Parsecs';
+    | 'Parsecs'
+    | 'US Survey Feet'
+    | 'US Survey Inch'
+    | 'US Survey Yard'
+    | 'US Survey Mile';
 
   type HorizontalAlignment = 'left' | 'center' | 'right';
   type VerticalAlignment = 'baseline' | 'bottom' | 'middle' | 'top';
