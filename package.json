@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/ognjen-petrovic/js-dxf#readme",
   "devDependencies": {
-    "husky": "^1.1.0",
+    "husky": "^9.1.7",
     "jasmine": "^3.2.0",
     "browserify": "^16.2.3",
     "minimist": ">=1.2.3"
